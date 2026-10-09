@@ -40,6 +40,41 @@ export type { Clock, Timer } from './domain/clock.js';
 export { isBrokerId, parseBrokerId } from './domain/ids.js';
 export type { Brand, BrokerId } from './domain/ids.js';
 
+export { Secret } from './config/secret.js';
+export type { SecretRef, SecretValue } from './config/secret.js';
+
+export { CONFIG_VERSION, configDocumentSchema, DEFAULT_REDACTED_KEYS } from './config/schema.js';
+export type { BrokerDocument, ConfigDocument } from './config/schema.js';
+
+export { resolveConfig } from './config/resolve.js';
+export type {
+  AuthConfig,
+  BrokerConfig,
+  ClientIdConfig,
+  DiscoveryConfig,
+  EngineConfig,
+  LimitsConfig,
+  LoggingConfig,
+  McpConfig,
+  ReadPolicyConfig,
+  RedactionConfig,
+  ResolveConfigOptions,
+  SecurityConfig,
+  StorageConfig,
+  TlsConfig,
+} from './config/resolve.js';
+
+export {
+  buildQuickStartDocument,
+  CONFIG_PATH_ENV,
+  loadConfig,
+  loadConfigFile,
+  parseConfigDocument,
+  parseConfigText,
+  QUICK_START_ENV,
+} from './config/load.js';
+export type { LoadConfigOptions } from './config/load.js';
+
 export {
   coversFilter,
   filtersIntersect,
