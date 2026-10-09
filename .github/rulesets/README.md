@@ -8,7 +8,9 @@ private on the Free plan.
 
 - changes reach `main` through a pull request;
 - the `CI success` check must pass, on an up-to-date branch;
-- no force-push, no branch deletion, linear history;
+- no force-push, no branch deletion;
+- linear history, so pull requests are merged with **squash** or **rebase**, never with a
+  merge commit;
 - review threads must be resolved before merging.
 
 `required_approving_review_count` is `0` so a solo maintainer is not blocked. Raise it to
