@@ -17,6 +17,7 @@
     "node": "^22.13.0 || >=24.0.0"
   },
   "scripts": {
+    "prepare": "node tools/setup-git-hooks.js",
     "build": "tsc -b tsconfig.build.json",
     "clean": "tsc -b tsconfig.build.json --clean",
     "typecheck": "tsc -p tsconfig.json && tsc -p packages/core && tsc -p packages/mcp-server",

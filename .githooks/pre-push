@@ -1,0 +1,25 @@
+#!/bin/sh
+# Refuse direct pushes to the default branch: changes go through a pull request.
+#
+# This is a local convenience, not a security control. Branch protection on GitHub is the
+# real control (see .github/rulesets/README.md).
+#
+# To push anyway: ALLOW_PUSH_TO_MAIN=1 git push
+
+protected_branch=main
+
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+  case "$remote_ref" in
+    "refs/heads/$protected_branch")
+      if [ "$ALLOW_PUSH_TO_MAIN" = "1" ]; then
+        echo "pre-push: ALLOW_PUSH_TO_MAIN=1, pushing to $protected_branch anyway." >&2
+      else
+        echo "pre-push: refusing to push directly to '$protected_branch'." >&2
+        echo "          Open a pull request, or set ALLOW_PUSH_TO_MAIN=1 to override." >&2
+        exit 1
+      fi
+      ;;
+  esac
+done
+
+exit 0
