@@ -12,10 +12,15 @@
   },
   "keywords": [
     "mcp",
+    "mcp-server",
     "model-context-protocol",
     "mqtt",
     "iot",
-    "ai-agents"
+    "iiot",
+    "industrial-iot",
+    "ai-agents",
+    "llm",
+    "claude"
   ],
   "exports": {
     ".": {
