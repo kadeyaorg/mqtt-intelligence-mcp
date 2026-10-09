@@ -54,6 +54,21 @@ jobs:
       - run: npm run build
       - run: npm test
 
+  ci-success:
+    # Single stable status for branch protection: the blocking jobs above must all succeed.
+    # Required status check in .github/rulesets/main.json; the experimental job is excluded
+    # on purpose.
+    name: CI success
+    runs-on: ubuntu-latest
+    needs: [quality, test]
+    if: always()
+    steps:
+      - name: Check blocking jobs
+        run: |
+          echo "quality: ${{ needs.quality.result }}"
+          echo "test: ${{ needs.test.result }}"
+          [ "${{ needs.quality.result }}" = "success" ] && [ "${{ needs.test.result }}" = "success" ]
+
   test-experimental:
     # Early warning on the current, not-yet-LTS Node.js line. Non-blocking, not advertised as
     # supported (ADR-0001).

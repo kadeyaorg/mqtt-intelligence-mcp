@@ -9,6 +9,15 @@ updates:
       development-tooling:
         dependency-type: development
         update-types: [minor, patch]
+    ignore:
+      # TypeScript 7 is released, but typescript-eslint accepts "<6.1.0" only; a major bump
+      # breaks type-aware linting. Remove this once typescript-eslint supports it (ADR-0016).
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+      # @types/node tracks the LOWEST supported Node.js LTS line, currently 22, so the code
+      # cannot silently use APIs missing there. Bump it when that line changes (ADR-0001).
+      - dependency-name: '@types/node'
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions
     directory: /
