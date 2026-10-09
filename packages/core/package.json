@@ -1,0 +1,36 @@
+{
+  "name": "@kadeya/mqtt-intel-core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "MQTT Intelligence engine: bounded discovery, topic catalog and safe payload views for MQTT infrastructures. Independent from MCP.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kadeyaorg/mqtt-intelligence-mcp.git",
+    "directory": "packages/core"
+  },
+  "keywords": [
+    "mqtt",
+    "iot",
+    "iiot",
+    "discovery",
+    "observability"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src",
+    "!**/*.tsbuildinfo"
+  ],
+  "engines": {
+    "node": "^22.12.0 || >=24.0.0"
+  }
+}

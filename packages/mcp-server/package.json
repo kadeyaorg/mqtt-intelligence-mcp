@@ -1,0 +1,38 @@
+{
+  "name": "@kadeya/mqtt-intel-mcp",
+  "version": "0.0.0",
+  "private": true,
+  "description": "MCP server giving AI agents safe, structured and observable, read-only-by-default access to MQTT infrastructures.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kadeyaorg/mqtt-intelligence-mcp.git",
+    "directory": "packages/mcp-server"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "mqtt",
+    "iot",
+    "ai-agents"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src",
+    "!**/*.tsbuildinfo"
+  ],
+  "engines": {
+    "node": "^22.12.0 || >=24.0.0"
+  },
+  "dependencies": {
+    "@kadeya/mqtt-intel-core": "0.0.0"
+  }
+}
