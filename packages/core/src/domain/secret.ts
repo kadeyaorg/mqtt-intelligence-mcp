@@ -8,7 +8,7 @@
  *
  * Only the component that actually needs the value calls `reveal()`.
  */
-import { REDACTED } from '../domain/errors.js';
+import { REDACTED } from './errors.js';
 
 /** Node's `util.inspect` hook, referenced without importing `node:util`. */
 const INSPECT_CUSTOM = Symbol.for('nodejs.util.inspect.custom');
@@ -47,15 +47,4 @@ export class Secret<Value extends SecretValue = string> {
   [INSPECT_CUSTOM](): string {
     return `Secret(${this.source} ${REDACTED})`;
   }
-}
-
-/** A reference to a secret held outside the repository. */
-export type SecretRef = { readonly env: string } | { readonly file: string };
-
-export function isEnvironmentRef(ref: SecretRef): ref is { readonly env: string } {
-  return 'env' in ref;
-}
-
-export function describeSecretRef(ref: SecretRef): string {
-  return isEnvironmentRef(ref) ? `env:${ref.env}` : `file:${ref.file}`;
 }
