@@ -58,6 +58,33 @@ export type {
 } from './observability/index.js';
 export type { Clock, Timer } from './domain/clock.js';
 
+export {
+  classifyPayload,
+  decodeUtf8,
+  DEFAULT_HEX_PREVIEW_BYTES,
+  DEFAULT_JSON_LIMITS,
+  DEFAULT_MAX_INSPECT_BYTES,
+  DEFAULT_MAX_TEXT_CHARS,
+  escapeControlCharacters,
+  limitJson,
+  looksBinary,
+  toPayloadView,
+} from './payload/index.js';
+export type {
+  ClassifyOptions,
+  JsonLimits,
+  JsonObject,
+  JsonType,
+  JsonValue,
+  LimitedJson,
+  LimitJsonOptions,
+  PayloadClassification,
+  PayloadKind,
+  PayloadView,
+  PayloadViewOptions,
+  UninspectedReason,
+} from './payload/index.js';
+
 export { isBrokerId, parseBrokerId } from './domain/ids.js';
 export type { Brand, BrokerId } from './domain/ids.js';
 
