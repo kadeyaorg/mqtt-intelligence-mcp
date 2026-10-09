@@ -12,10 +12,14 @@
   },
   "keywords": [
     "mqtt",
+    "mqtt-client",
     "iot",
     "iiot",
-    "discovery",
-    "observability"
+    "industrial-iot",
+    "unified-namespace",
+    "topic-discovery",
+    "observability",
+    "typescript"
   ],
   "sideEffects": false,
   "exports": {
