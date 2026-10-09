@@ -35,13 +35,35 @@ export type {
 } from './domain/errors.js';
 
 export { sleepWithTimer, SystemClock, systemClock } from './domain/clock.js';
+
+export { createLogger, noopLogger, noopMetrics, sanitizeFields } from './observability/index.js';
+export type {
+  Counter,
+  Histogram,
+  Logger,
+  LoggerOptions,
+  LogFields,
+  LogFieldValue,
+  LogFormat,
+  LogLevel,
+  LogSink,
+  MetricAttributes,
+  MetricAttributeValue,
+  MetricOptions,
+  MetricsRecorder,
+  SafeRecord,
+  SafeValue,
+  SanitizeOptions,
+  UpDownCounter,
+} from './observability/index.js';
 export type { Clock, Timer } from './domain/clock.js';
 
 export { isBrokerId, parseBrokerId } from './domain/ids.js';
 export type { Brand, BrokerId } from './domain/ids.js';
 
-export { Secret } from './config/secret.js';
-export type { SecretRef, SecretValue } from './config/secret.js';
+export { Secret } from './domain/secret.js';
+export type { SecretValue } from './domain/secret.js';
+export type { SecretRef } from './config/secret-ref.js';
 
 export { CONFIG_VERSION, configDocumentSchema, DEFAULT_REDACTED_KEYS } from './config/schema.js';
 export type { BrokerDocument, ConfigDocument } from './config/schema.js';

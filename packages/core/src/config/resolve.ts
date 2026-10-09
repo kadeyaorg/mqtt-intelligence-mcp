@@ -13,8 +13,9 @@ import { ConfigError, describeError } from '../domain/errors.js';
 import type { BrokerId } from '../domain/ids.js';
 import type { TopicFilter } from '../domain/topic.js';
 import type { BrokerDocument, ConfigDocument } from './schema.js';
-import type { SecretRef } from './secret.js';
-import { describeSecretRef, isEnvironmentRef, Secret } from './secret.js';
+import type { SecretRef } from './secret-ref.js';
+import { describeSecretRef, isEnvironmentRef } from './secret-ref.js';
+import { Secret } from '../domain/secret.js';
 
 export type LimitsConfig = ConfigDocument['limits'];
 export type McpConfig = ConfigDocument['mcp'];

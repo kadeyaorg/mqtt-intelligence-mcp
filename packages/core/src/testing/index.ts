@@ -7,3 +7,9 @@
 
 export { FakeClock } from './fake-clock.js';
 export type { FakeClockOptions } from './fake-clock.js';
+
+export { createRecordingLogger } from './recording-logger.js';
+export type { RecordedLine, RecordingLogger } from './recording-logger.js';
+
+export { InMemoryMetricsRecorder } from './in-memory-metrics.js';
+export type { Measurement } from './in-memory-metrics.js';

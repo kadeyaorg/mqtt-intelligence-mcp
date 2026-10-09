@@ -21,7 +21,7 @@ mqtt-intelligence-mcp/
 ├── packages/
 │   ├── core/                      # @kadeya/mqtt-intel-core   (library, published)
 │   │   ├── src/
-│   │   │   ├── domain/            # topics, messages, ids, errors, clock  (pure, no I/O)
+│   │   │   ├── domain/            # topics, messages, ids, errors, clock, secrets (pure)
 │   │   │   ├── config/            # zod schema, loader (YAML/env), secret references
 │   │   │   ├── payload/           # classification, LLM-safe views, redaction
 │   │   │   ├── policy/            # read/publish access policy, limits
