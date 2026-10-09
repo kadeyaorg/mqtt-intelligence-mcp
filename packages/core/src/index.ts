@@ -85,6 +85,9 @@ export type {
   UninspectedReason,
 } from './payload/index.js';
 
+export { createReadPolicy } from './policy/index.js';
+export type { ReadPolicy, ReadRules, SubscribeDecision } from './policy/index.js';
+
 export { isBrokerId, parseBrokerId } from './domain/ids.js';
 export type { Brand, BrokerId } from './domain/ids.js';
 
