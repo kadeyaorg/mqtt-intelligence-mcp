@@ -16,3 +16,12 @@ export type { Measurement } from './in-memory-metrics.js';
 
 export { FakeTransport, FakeTransportFactory } from './fake-transport.js';
 export type { ConnectBehaviour, FakeSubscription } from './fake-transport.js';
+
+export {
+  CONTRACT_BROKER,
+  messageStoreContract,
+  observedMessage,
+  topicCatalogContract,
+  topicDelta,
+} from './store-contract.js';
+export type { ContractHarness } from './store-contract.js';

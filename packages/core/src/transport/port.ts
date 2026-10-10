@@ -10,21 +10,13 @@
  * testable without a broker, per-filter subscribe outcomes (mqtt.js rejects a whole batch
  * when one filter is refused), and a single directory to change when mqtt.js v6 lands.
  */
+import type { MessageProperties, QoS } from '../domain/mqtt.js';
 import type { TopicFilter } from '../domain/topic.js';
 import type { Secret } from '../domain/secret.js';
 
-export type QoS = 0 | 1 | 2;
-
-/** MQTT 5 properties carried by a message. Recorded as facts, never trusted over bytes. */
-export interface InboundMessageProperties {
-  readonly contentType?: string;
-  readonly payloadFormatIndicator?: 0 | 1;
-  readonly messageExpiryInterval?: number;
-  readonly responseTopic?: string;
-  /** Size only: correlation data can carry anything. */
-  readonly correlationDataSize?: number;
-  readonly userProperties?: readonly (readonly [string, string])[];
-}
+/** Kept as names callers already use; the shapes live in the domain. */
+export type InboundMessageProperties = MessageProperties;
+export type { QoS };
 
 export interface InboundMessage {
   /** Raw topic as delivered. Validation belongs to the ingest path. */
