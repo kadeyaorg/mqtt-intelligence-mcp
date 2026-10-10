@@ -98,8 +98,8 @@ core: Eclipse Mosquitto, EMQX, HiveMQ, NanoMQ, VerneMQ, AWS IoT Core, Azure Even
 broker, and others. Discovery needs an account allowed to subscribe to the topics of
 interest; where a broker refuses a subscription, that refusal is reported rather than hidden.
 
-Azure IoT Hub is **not** a general-purpose broker — a client cannot subscribe to other
-devices' topics — so namespace discovery is not possible there.
+Azure IoT Hub is **not** a general-purpose broker, a client cannot subscribe to other
+devices' topics, so namespace discovery is not possible there.
 
 ## Quick start (planned)
 
@@ -172,7 +172,7 @@ Details and what is deliberately excluded: [V0.1 scope](docs/proposal/04-scope-v
 
 **Does it need an API key, or send data to a model provider itself?** No. It has no LLM
 inside and no dependency on any AI provider. Your agent's own client decides what is sent
-to its model — which is why payloads are truncated and redacted before they leave the
+to its model, which is why payloads are truncated and redacted before they leave the
 engine.
 
 **Can an agent break my plant with it?** Publishing is not implemented, and will ship
@@ -201,7 +201,7 @@ The project is in its bootstrap phase; contribution guidelines arrive with the f
 release. Contributions are accepted under Apache-2.0 with a DCO sign-off (`git commit -s`),
 with no CLA.
 
-Requirements: Node.js 22 (≥ 22.13) or 24 — only LTS lines are supported
+Requirements: Node.js 22 (≥ 22.13) or 24, only LTS lines are supported
 ([ADR-0001](docs/adr/0001-typescript-on-node-lts.md)).
 
 ```bash
