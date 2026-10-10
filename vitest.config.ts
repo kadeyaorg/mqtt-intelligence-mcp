@@ -8,6 +8,19 @@ export default defineConfig({
           name: 'core',
           root: './packages/core',
           include: ['test/**/*.test.ts'],
+          // Integration tests need Docker; they run as their own project.
+          exclude: ['test/integration/**'],
+        },
+      },
+      {
+        test: {
+          name: 'core-integration',
+          root: './packages/core',
+          include: ['test/integration/**/*.test.ts'],
+          testTimeout: 60_000,
+          hookTimeout: 180_000,
+          // Containers are slow to start and brokers bind ports: no parallel files.
+          fileParallelism: false,
         },
       },
       {

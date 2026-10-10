@@ -13,3 +13,6 @@ export type { RecordedLine, RecordingLogger } from './recording-logger.js';
 
 export { InMemoryMetricsRecorder } from './in-memory-metrics.js';
 export type { Measurement } from './in-memory-metrics.js';
+
+export { FakeTransport, FakeTransportFactory } from './fake-transport.js';
+export type { ConnectBehaviour, FakeSubscription } from './fake-transport.js';
