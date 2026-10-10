@@ -38,6 +38,8 @@
     "node": "^22.12.0 || >=24.0.0"
   },
   "dependencies": {
-    "@kadeya/mqtt-intel-core": "0.0.0"
+    "@kadeya/mqtt-intel-core": "0.0.0",
+    "@modelcontextprotocol/server": "^2.3.1",
+    "zod": "^4.6.5"
   }
 }
