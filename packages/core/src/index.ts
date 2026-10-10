@@ -169,6 +169,18 @@ export type {
 
 export type { MessageProperties } from './domain/mqtt.js';
 
+export { DEFAULT_INGEST_LIMITS, IngestPipeline } from './ingest/index.js';
+export type { IngestCounters, IngestLimits, IngestPipelineDependencies } from './ingest/index.js';
+
+export { DiscoveryService, SYSTEM_TOPIC_FILTER } from './discovery/index.js';
+export type {
+  DiscoveryOptions,
+  DiscoveryServiceDependencies,
+  ObservationCoverage,
+  ObservationGap,
+  RejectedFilterReport,
+} from './discovery/index.js';
+
 export { createReadPolicy } from './policy/index.js';
 export type { ReadPolicy, ReadRules, SubscribeDecision } from './policy/index.js';
 
