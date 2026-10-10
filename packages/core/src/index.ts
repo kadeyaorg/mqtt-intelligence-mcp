@@ -115,6 +115,14 @@ export type {
 
 export { MqttJsTransportFactory } from './transport/mqttjs/adapter.js';
 
+export { minimalCover, SubscriptionManager } from './subscription/index.js';
+export type {
+  LeaseRequest,
+  RejectedFilter,
+  SubscriptionLease,
+  SubscriptionManagerDependencies,
+} from './subscription/index.js';
+
 export { createReadPolicy } from './policy/index.js';
 export type { ReadPolicy, ReadRules, SubscribeDecision } from './policy/index.js';
 
