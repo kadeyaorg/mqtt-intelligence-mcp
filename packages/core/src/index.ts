@@ -173,19 +173,53 @@ export { DEFAULT_INGEST_LIMITS, IngestPipeline } from './ingest/index.js';
 export type { IngestCounters, IngestLimits, IngestPipelineDependencies } from './ingest/index.js';
 
 export { DiscoveryService, SYSTEM_TOPIC_FILTER } from './discovery/index.js';
+export type { DiscoveryOptions, DiscoveryServiceDependencies } from './discovery/index.js';
+
+export { createEngine } from './engine.js';
 export type {
-  DiscoveryOptions,
-  DiscoveryServiceDependencies,
-  ObservationCoverage,
-  ObservationGap,
-  RejectedFilterReport,
-} from './discovery/index.js';
+  BrokerReport,
+  DescribeTopicRequest,
+  DiscoverFacts,
+  DiscoverRequest,
+  Engine,
+  EngineDependencies,
+  OperationOptions,
+  RecentMessagesFacts,
+  RecentMessagesRequest,
+  SearchTopicsFacts,
+  SearchTopicsRequest,
+  TopicTreeRequest,
+} from './engine.js';
+
+export {
+  coverageLimitations,
+  DELIVERED_QOS_LIMITATION,
+  RETAINED_REPLAY_LIMITATION,
+  SAMPLED_HISTORY_LIMITATION,
+  SHORT_OBSERVATION_MS,
+  truncatedResults,
+} from './query/index.js';
+export type {
+  Answer,
+  IntervalObservation,
+  Limitation,
+  LimitationCode,
+  MessageFact,
+  TopicFacts,
+  TopicObservations,
+  TopicSummary,
+} from './query/index.js';
 
 export { createReadPolicy } from './policy/index.js';
 export type { ReadPolicy, ReadRules, SubscribeDecision } from './policy/index.js';
 
 export { isBrokerId, parseBrokerId } from './domain/ids.js';
 export type { Brand, BrokerId } from './domain/ids.js';
+export type {
+  ObservationCoverage,
+  ObservationGap,
+  RejectedFilterReport,
+} from './domain/coverage.js';
 
 export { Secret } from './domain/secret.js';
 export type { SecretValue } from './domain/secret.js';

@@ -14,7 +14,6 @@
 import type { CatalogStats, TopicCatalog } from '../catalog/index.js';
 import type { Clock } from '../domain/clock.js';
 import { systemClock } from '../domain/clock.js';
-import type { BrokerId } from '../domain/ids.js';
 import type { QoS } from '../domain/mqtt.js';
 import type { TopicFilter } from '../domain/topic.js';
 import { parseTopicFilter } from '../domain/topic.js';
@@ -23,6 +22,11 @@ import type { IngestPipeline } from '../ingest/index.js';
 import type { Logger } from '../observability/index.js';
 import { noopLogger } from '../observability/index.js';
 import type { SubscriptionLease, SubscriptionManager } from '../subscription/index.js';
+import type {
+  ObservationCoverage,
+  ObservationGap,
+  RejectedFilterReport,
+} from '../domain/coverage.js';
 
 /** `#` never matches a $ tree, so broker-internal topics must be asked for by name. */
 export const SYSTEM_TOPIC_FILTER = parseTopicFilter('$SYS/#');
@@ -31,36 +35,6 @@ export interface DiscoveryOptions {
   readonly filters: readonly TopicFilter[];
   readonly includeSysTopics?: boolean;
   readonly subscriptionQos?: QoS;
-}
-
-export interface RejectedFilterReport {
-  readonly filter: TopicFilter;
-  readonly reason: string;
-}
-
-export interface ObservationGap {
-  readonly from: number;
-  readonly to?: number;
-  readonly reason: 'disconnected' | 'not-started';
-}
-
-export interface ObservationCoverage {
-  readonly brokerId: BrokerId;
-  /** Filters actually subscribed, after the policy narrowed anything it had to. */
-  readonly filters: readonly TopicFilter[];
-  /** Filters nobody is observing, and why. */
-  readonly rejectedFilters: readonly RejectedFilterReport[];
-  readonly observingSince?: number;
-  /** Milliseconds actually spent connected and subscribed. */
-  readonly observedMs: number;
-  /** Periods with no observation at all. Bounded: only the most recent ones are kept. */
-  readonly gaps: readonly ObservationGap[];
-  readonly droppedPayloads: number;
-  readonly deniedMessages: number;
-  readonly evictedTopics: number;
-  readonly ignoredTopics: number;
-  readonly topicCount: number;
-  readonly messageCount: number;
 }
 
 export interface DiscoveryServiceDependencies {
