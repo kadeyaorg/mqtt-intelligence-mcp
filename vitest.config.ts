@@ -39,7 +39,9 @@ export default defineConfig({
     ],
     coverage: {
       provider: 'v8',
-      include: ['packages/*/src/**/*.ts'],
+      // Projects have their own roots, so the pattern must not assume the workspace one.
+      include: ['**/src/**/*.ts'],
+      exclude: ['**/dist/**'],
       reporter: ['text', 'lcov'],
     },
   },

@@ -122,6 +122,52 @@ export type {
   SubscriptionLease,
   SubscriptionManagerDependencies,
 } from './subscription/index.js';
+export {
+  applyDelta,
+  createRate,
+  createRecord,
+  decayRate,
+  DEFAULT_RATE_TIME_CONSTANT_MS,
+  EMPTY_DISTRIBUTION,
+  mergeDistributions,
+  mergeRates,
+  mergeRecords,
+  observeRate,
+  observeValue,
+  silenceRatio,
+  standardDeviation,
+  variance,
+} from './catalog/index.js';
+export type {
+  CatalogBatchResult,
+  CatalogStats,
+  DistributionState,
+  Page,
+  PayloadKindCounts,
+  QosCounts,
+  RateState,
+  RetainedState,
+  TopicCatalog,
+  TopicDelta,
+  TopicQuery,
+  TopicRecord,
+  TopicSortKey,
+  TopicTreeNode,
+  TreeQuery,
+} from './catalog/index.js';
+
+export { MemoryMessageStore, MemoryTopicCatalog } from './store/index.js';
+export type {
+  MemoryMessageStoreOptions,
+  MemoryTopicCatalogOptions,
+  MessageQuery,
+  MessageStore,
+  MessageStoreStats,
+  ObservedMessage,
+  StoredPayload,
+} from './store/index.js';
+
+export type { MessageProperties } from './domain/mqtt.js';
 
 export { createReadPolicy } from './policy/index.js';
 export type { ReadPolicy, ReadRules, SubscribeDecision } from './policy/index.js';
