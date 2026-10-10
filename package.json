@@ -24,9 +24,10 @@
     "lint": "eslint --max-warnings=0 .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "check": "npm run build && npm run typecheck && npm run lint && npm run format:check && npm run test"
+    "test": "vitest run --project core --project mcp-server --project tools",
+    "test:coverage": "vitest run --project core --project mcp-server --project tools --coverage",
+    "check": "npm run build && npm run typecheck && npm run lint && npm run format:check && npm run test",
+    "test:integration": "vitest run --project core-integration"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -35,6 +36,7 @@
     "eslint": "10.12.0",
     "fast-check": "^4.10.2",
     "prettier": "3.9.9",
+    "testcontainers": "^12.2.0",
     "typescript": "6.0.3",
     "typescript-eslint": "8.71.1",
     "vite": "8.3.3",

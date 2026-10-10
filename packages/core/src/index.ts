@@ -85,6 +85,36 @@ export type {
   UninspectedReason,
 } from './payload/index.js';
 
+export { BrokerConnection, BrokerRegistry } from './broker/index.js';
+export type {
+  BrokerConnectionDependencies,
+  BrokerConnectionOptions,
+  BrokerFailure,
+  BrokerState,
+  BrokerStatus,
+  ReconnectOptions,
+} from './broker/index.js';
+
+export { isNonRetryableConnectReason } from './transport/index.js';
+export type {
+  ConnectResult,
+  DisconnectReason,
+  InboundMessage,
+  InboundMessageProperties,
+  MqttTransport,
+  QoS,
+  ServerCapabilities,
+  SubscribeOptions,
+  SubscribeOutcome,
+  TransportFactory,
+  TransportHandlers,
+  TransportOptions,
+  TransportTlsOptions,
+  UnsubscribeOutcome,
+} from './transport/index.js';
+
+export { MqttJsTransportFactory } from './transport/mqttjs/adapter.js';
+
 export { createReadPolicy } from './policy/index.js';
 export type { ReadPolicy, ReadRules, SubscribeDecision } from './policy/index.js';
 
