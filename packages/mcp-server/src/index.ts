@@ -1,7 +1,8 @@
 /**
  * Public API of the MQTT Intelligence MCP server (`@kadeya/mqtt-intel-mcp`).
  *
- * Everything exported from this file is public API under semver. Exports are added step by
- * step, following docs/proposal/05-implementation-plan.md.
+ * Everything exported from this file is public API under semver. The tool names, their
+ * schemas and their error codes are part of it too: prompts depend on them (ADR-0012).
  */
-export {};
+export { createMcpServer } from './server.js';
+export type { McpServerOptions } from './server.js';
