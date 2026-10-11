@@ -11,7 +11,8 @@
   },
   "workspaces": [
     "packages/core",
-    "packages/mcp-server"
+    "packages/mcp-server",
+    "examples/industrial-machine/simulator"
   ],
   "engines": {
     "node": "^22.13.0 || >=24.0.0"
@@ -20,14 +21,14 @@
     "prepare": "node tools/setup-git-hooks.js",
     "build": "tsc -b tsconfig.build.json",
     "clean": "tsc -b tsconfig.build.json --clean",
-    "typecheck": "tsc -p tsconfig.json && tsc -p packages/core && tsc -p packages/mcp-server",
+    "typecheck": "tsc -p tsconfig.json && tsc -p packages/core && tsc -p packages/mcp-server && tsc -p examples/industrial-machine/simulator",
     "lint": "eslint --max-warnings=0 .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run --project core --project mcp-server --project tools",
     "test:coverage": "vitest run --project core --project mcp-server --project tools --coverage",
     "check": "npm run build && npm run typecheck && npm run lint && npm run format:check && npm run test",
-    "test:integration": "vitest run --project core-integration"
+    "test:integration": "vitest run --project core-integration --project mcp-server-integration"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
