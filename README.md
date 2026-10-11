@@ -63,27 +63,70 @@ Then ask it something. Snippets for all four clients:
 > [example README](examples/industrial-machine/README.md#if-1883-is-taken) says how to move the
 > port and the URL together.
 
-## Things to ask it
+## What you can do with it
 
-Against the example stack, these all work today:
+Five things, all of which work today against the example stack — and against a real broker,
+which is where they were worked out.
 
-- _What MQTT topics exist on this broker?_
-- _Show me the namespace as a tree._
-- _Find everything related to the robot._
-- _Which topics publish most often? Which have gone quiet?_
-- _Describe `factory/line-01/robot/status`._
-- _What did `factory/line-01/plc/state` last say?_
-- _Something went wrong on line 01 a few minutes ago. What do you see?_
+### Understand a namespace nobody documented
 
-That last one is worth watching closely. The simulator publishes a robot error, and the washer
-stops 1.2 seconds later. A good answer gives you both events with their receipt times and the
-gap between them. It does **not** tell you the robot stopped the washer — because nothing an
-MQTT client can observe says that, and the server never says it either.
+> _What MQTT topics exist on this broker? Show me the namespace as a tree._
+
+MQTT has no index. Pointed at an unfamiliar broker, an agent comes back in thirty seconds with
+the branches, how many topics are in each, how often they publish and what kind of payload they
+carry. For a new engineer, an outside contractor, or you in six months on a different machine,
+this is the win you feel first.
+
+### Write code against a machine, without a terminal open beside you
+
+> _Which topic carries the washer state, and what does its payload look like?_
+
+```
+plc/washer/state — 1 message every 1.5 s · retained · json
+  {"Index":2,"Capacity":10,"HoodIsUp":true,"HoodIsDown":false,"State":"Filling"}
+```
+
+The real shape, the real rate, and the fact that it is a retained state topic. No
+`mosquitto_sub` in another window, no copy-paste of a payload you hope is representative.
+
+### Diagnose something that stopped
+
+> _Something went wrong on line 01 a few minutes ago. What do you see?_
+
+The agent gets both events with their receipt times — the robot error, and the washer going to
+`HOLD` 1.2 seconds later. **It is not told that one caused the other**, because nothing an MQTT
+client can observe says so. You get the gap and the facts; the conclusion stays yours. That
+restraint is the whole point of the project, and the example stack is built to demonstrate it.
+
+### See what has gone quiet
+
+> _Which topics publish most often? Which have stopped?_
+
+A node that crashed, a PLC that dropped off, a sensor that went silent — visible immediately.
+And the other way round: the server knows what normal looks like for each topic (`1.40 msg/s`,
+intervals between 152 and 263 ms), so "this one is publishing seven times slower than usual" is
+a fact it can state rather than a feeling you have.
+
+### Hand an agent broker access without holding your breath
+
+There is **no publish path** — not disabled, absent. A read policy with deny precedence keeps
+whole subtrees out of every answer, applied at ingest so no tool can reach them. You can point
+this at a production broker and go and do something else.
+
+## What it is not
+
+- **Not a historian.** It sees what is published while it is watching, and the catalogue is in
+  memory: restart it and it starts again. "What happened last Tuesday" is a question for your
+  time-series database.
+- **Not a schema tool yet.** It shows you the last payload; deriving a schema from many is V0.2.
+- **Not a recorder yet.** Replaying a ten-minute window around an incident is V0.3.
+- **Not a controller.** It cannot command anything, and when guarded publishing arrives in V0.4
+  it will be off unless you turn it on.
 
 ## Why it exists
 
-MQTT has no way to list topics, no schema, and no description of what a namespace contains. An
-engineer facing an unfamiliar broker subscribes to `#` and reads raw bytes.
+An engineer facing an unfamiliar broker subscribes to `#` and reads raw bytes, because MQTT
+offers nothing better: no index, no schema, no description.
 
 An AI agent handed a plain MQTT client has that problem and three of its own: it floods its
 context with a firehose of messages, it can be led astray by payloads that read like
