@@ -61,6 +61,12 @@ function waitForShutdown(): Promise<ShutdownReason> {
  * every command and for every outcome.
  */
 export async function runServe(engine: Engine, logger: Logger, version: string): Promise<number> {
+  // Listening for a stop is the very first thing done, before anything that takes time and
+  // before a single byte is written. A stop asked for while the brokers are still connecting
+  // must still be a graceful stop; and until this listener exists, a signal would terminate
+  // the process by Node's default disposition, which is a race against our own start-up.
+  const shutdown = waitForShutdown();
+
   // Brokers configured to connect at start-up connect now, so the first tool call does not
   // pay for it. A broker that refuses does not stop the server: the tools report it.
   await engine.start();
@@ -74,7 +80,7 @@ export async function runServe(engine: Engine, logger: Logger, version: string):
   });
   logger.info('Serving MCP over stdio', { version });
 
-  const reason = await waitForShutdown();
+  const reason = await shutdown;
   logger.info('Shutting down', { reason });
   await closeWithDeadline('mcp', handle.close(), logger);
 
