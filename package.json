@@ -11,7 +11,8 @@
   },
   "workspaces": [
     "packages/core",
-    "packages/mcp-server"
+    "packages/mcp-server",
+    "examples/industrial-machine/simulator"
   ],
   "engines": {
     "node": "^22.13.0 || >=24.0.0"
@@ -20,16 +21,22 @@
     "prepare": "node tools/setup-git-hooks.js",
     "build": "tsc -b tsconfig.build.json",
     "clean": "tsc -b tsconfig.build.json --clean",
-    "typecheck": "tsc -p tsconfig.json && tsc -p packages/core && tsc -p packages/mcp-server",
+    "typecheck": "tsc -p tsconfig.json && tsc -p packages/core && tsc -p packages/mcp-server && tsc -p examples/industrial-machine/simulator",
     "lint": "eslint --max-warnings=0 .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run --project core --project mcp-server --project tools",
     "test:coverage": "vitest run --project core --project mcp-server --project tools --coverage",
+    "test:coverage:core": "vitest run --project core --project core-integration --coverage --coverage.include=src/**/*.ts",
     "check": "npm run build && npm run typecheck && npm run lint && npm run format:check && npm run test",
-    "test:integration": "vitest run --project core-integration"
+    "test:integration": "vitest run --project core-integration --project mcp-server-integration",
+    "changeset": "changeset",
+    "version": "changeset version && npm install --package-lock-only",
+    "release": "npm run build && changeset publish"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "1.0.1",
+    "@changesets/cli": "3.0.3",
     "@eslint/js": "10.0.1",
     "@modelcontextprotocol/client": "^2.3.1",
     "@types/node": "22.20.5",

@@ -49,6 +49,8 @@ mqtt-intelligence-mcp/
 │       └── test/
 ├── examples/
 │   ├── industrial-machine/        # fictional factory simulator + docker compose + config
+│   │   └── simulator/             # a third npm workspace, private and never published:
+│   │                              #   one TypeScript file Node runs without compiling
 │   ├── configs/                   # single broker, multi-broker, TLS/mTLS, AWS IoT, Azure EG
 │   └── mcp-clients/               # Claude Desktop/Code, Cursor, VS Code configuration snippets
 ├── docs/

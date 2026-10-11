@@ -1,0 +1,42 @@
+# Azure Event Grid, MQTT broker feature.
+#
+# Event Grid is MQTT 5 only and authenticates with a client certificate. The client id must be
+# the name of the registered client, so this is one of the rare cases where a fixed client id
+# is correct: it is an identity, not a connection detail. Topic spaces and permission bindings
+# on the Azure side decide what can be subscribed to, whatever this file says.
+version: 1
+
+brokers:
+  azure-eg:
+    url: mqtts://my-namespace.westeurope-1.ts.eventgrid.azure.net:8883
+
+    # MQTT 5 is the only version Event Grid speaks.
+    protocolVersion: 5
+
+    # The registered client's authentication name. Reusing it elsewhere disconnects that other
+    # session, so this identity belongs to the MCP server alone.
+    clientId:
+      fixed: mqtt-intelligence-reader
+
+    auth:
+      # Event Grid expects the client authentication name as the username.
+      username: mqtt-intelligence-reader
+
+    tls:
+      cert:
+        file: ./certs/client.pem
+      key:
+        file: ./certs/client.key
+
+    discovery:
+      filters:
+        - factory/#
+
+    security:
+      read:
+        allow:
+          - factory/#
+
+logging:
+  level: info
+  format: json

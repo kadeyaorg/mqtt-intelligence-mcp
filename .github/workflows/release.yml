@@ -1,0 +1,142 @@
+name: Release
+
+# Manual on purpose. Nothing about this repository should be able to publish to npm because
+# somebody merged a pull request: a release is a decision, and it is taken here, by a person.
+#
+#   version → collects the changesets, bumps the versions, writes the changelogs, opens a PR
+#   publish → builds, checks, and publishes what is on main, with provenance
+#
+# Run "version" first, merge the pull request it opens, then run "publish" on main.
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: What to do
+        required: true
+        type: choice
+        options: [version, publish]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  version:
+    name: Version (open the release pull request)
+    if: inputs.action == 'version'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+
+      - name: Check that there is something to release
+        run: |
+          if [ -z "$(find .changeset -name '*.md' -not -name 'README.md' -print -quit)" ]; then
+            echo "No changesets: nothing to release." >&2
+            exit 1
+          fi
+
+      - name: Bump versions and write the changelogs
+        run: npm run version
+
+      - name: Open the release pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./packages/mcp-server/package.json').version")"
+          branch="release/v${version}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add -A
+          git commit -s -m "chore(release): v${version}"
+          git push --force-with-lease -u origin "$branch"
+          gh pr create \
+            --base "${{ github.ref_name }}" \
+            --head "$branch" \
+            --title "chore(release): v${version}" \
+            --body "Versions bumped and changelogs written by \`changeset version\`. Merge this, then run the Release workflow again with \`publish\`."
+
+  publish:
+    name: Publish to npm
+    if: inputs.action == 'publish'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      # Required for npm provenance: the registry verifies the build came from this workflow.
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - name: Refuse to publish a package still marked private
+        # Both packages stay private until the npm organisation is confirmed (ADR-0002). This
+        # turns "npm quietly published nothing" into a failure that says why.
+        run: |
+          set -euo pipefail
+          for manifest in packages/*/package.json; do
+            if [ "$(node -p "require('./$manifest').private === true")" = "true" ]; then
+              echo "$manifest is marked \"private\": true. Set it to false to publish." >&2
+              exit 1
+            fi
+          done
+
+      - name: Refuse to publish an unreleased version
+        run: |
+          set -euo pipefail
+          if [ -n "$(find .changeset -name '*.md' -not -name 'README.md' -print -quit)" ]; then
+            echo "Changesets are still pending: run the workflow with \"version\" first." >&2
+            exit 1
+          fi
+
+      - run: npm ci
+      - run: npm run check
+      - name: Integration tests
+        run: npm run test:integration
+
+      - name: Publish
+        # Provenance is requested per package through publishConfig, so the attestation is
+        # produced whichever way publish is invoked.
+        run: npm run release
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Tag and release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./packages/mcp-server/package.json').version")"
+          # Only this version's section of the changelog, not the whole history.
+          awk -v heading="## ${version}" '
+            $0 == heading { printing = 1; next }
+            printing && /^## / { exit }
+            printing { print }
+          ' packages/mcp-server/CHANGELOG.md > "${RUNNER_TEMP}/notes.md"
+          git tag -a "v${version}" -m "v${version}"
+          git push origin "v${version}"
+          gh release create "v${version}" \
+            --title "v${version}" \
+            --notes-file "${RUNNER_TEMP}/notes.md" \
+            --verify-tag

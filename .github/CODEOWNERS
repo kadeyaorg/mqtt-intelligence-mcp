@@ -1,0 +1,17 @@
+# Review is required from a maintainer for everything. The ruleset in .github/rulesets makes
+# this binding once branch protection is enabled on the repository.
+*                       @christophe77
+
+# Decisions and security claims. These change what the project promises, not just what it
+# does, so they are called out separately rather than relying on the catch-all above.
+/docs/adr/              @christophe77
+/docs/security.md       @christophe77
+/SECURITY.md            @christophe77
+/LICENSE                @christophe77
+/NOTICE                 @christophe77
+
+# Supply chain: what gets installed, what gets published, and what runs in CI.
+/package.json           @christophe77
+/package-lock.json      @christophe77
+/.github/workflows/     @christophe77
+/.changeset/            @christophe77

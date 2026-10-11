@@ -55,7 +55,9 @@ jobs:
       - run: npm test
 
   integration:
-    # Talks to a real Eclipse Mosquitto through Testcontainers, so Docker is required.
+    # Talks to a real Eclipse Mosquitto through Testcontainers, and starts the published
+    # example stack with Docker Compose, so Docker is required. The example is verified the
+    # way a reader runs it: compose up, then check, then an MCP session.
     name: Integration tests (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
     timeout-minutes: 20

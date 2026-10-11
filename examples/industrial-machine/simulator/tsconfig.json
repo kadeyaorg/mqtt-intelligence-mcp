@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": ".",
+    // The simulator is never compiled: Node runs the TypeScript directly, in the container
+    // and on a developer's machine. This option makes the compiler refuse any syntax that
+    // would need emitting, so the file cannot silently stop being runnable that way.
+    "erasableSyntaxOnly": true
+  },
+  "include": ["src"]
+}

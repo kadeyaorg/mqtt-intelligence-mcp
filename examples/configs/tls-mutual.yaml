@@ -1,0 +1,46 @@
+# TLS, and mutual TLS: the broker proves who it is, and so do we.
+#
+# Certificates are not secrets, but they still live in files beside this one. Paths are
+# resolved relative to THIS file, not to the working directory, so a configuration directory
+# can be moved or mounted as a whole.
+version: 1
+
+brokers:
+  factory-fr:
+    url: mqtts://broker.example.com:8883
+
+    tls:
+      # The authority that signed the broker's certificate. Needed when it is a private CA,
+      # which it usually is on a plant network.
+      ca:
+        file: ./certs/ca.crt
+
+      # Mutual TLS: our certificate and its key. Both or neither.
+      cert:
+        file: ./certs/client.crt
+      key:
+        file: ./certs/client.key
+      # Only if the key is encrypted. Referenced like any other secret.
+      keyPassphrase:
+        env: MQTT_CLIENT_KEY_PASSPHRASE
+
+      # The name to check the certificate against, when the address you connect to is not the
+      # name the certificate was issued for (a load balancer, a tunnel, an IP address).
+      serverName: broker.example.com
+
+      # Certificate verification stays on. Turning it off accepts any certificate, including
+      # one presented by whoever is between you and the broker, and `check` prints a warning
+      # in capitals when you do. If a private CA is the problem, set "ca" above instead.
+      rejectUnauthorized: true
+
+    discovery:
+      filters:
+        - factory/#
+    security:
+      read:
+        allow:
+          - factory/#
+
+logging:
+  level: info
+  format: json

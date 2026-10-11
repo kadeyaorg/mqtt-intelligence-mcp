@@ -1,0 +1,49 @@
+# Configuration for the local example stack (docker-compose.yml).
+#
+# Point your MCP client at this file:
+#   mqtt-intel-mcp --config examples/industrial-machine/mqtt-intelligence.yaml
+version: 1
+
+brokers:
+  factory-fr:
+    # The broker runs in Docker and publishes 1883 on the host; the MCP server runs on the
+    # host, next to your MCP client.
+    url: mqtt://localhost:1883
+    discovery:
+      # The simulator only publishes under "factory/". Narrowing the filter here means the
+      # server never even asks the broker for anything else.
+      filters:
+        - factory/#
+    security:
+      read:
+        allow:
+          - factory/#
+        # The simulator publishes this topic every five seconds. Deny wins over allow, so the
+        # server never stores it and it appears in no answer: not in the topic tree, not in a
+        # search, not in a count. Run the stack and look for it to see for yourself.
+        deny:
+          - factory/+/+/credentials/#
+
+security:
+  redaction:
+    # This list REPLACES the defaults, so the defaults are repeated here and the line's own
+    # key is added. Matching is on the whole key name, lowercased, not on a substring: the
+    # retained document on "factory/site/metadata" carries "maintenanceApiKey", which the
+    # built-in "apikey" would not catch. Your own payloads will need the same treatment.
+    jsonKeys:
+      - password
+      - token
+      - secret
+      - apikey
+      - api_key
+      - maintenanceapikey
+      - credential
+      - credentials
+      - authorization
+      - passphrase
+      - privatekey
+      - private_key
+
+logging:
+  level: info
+  format: pretty

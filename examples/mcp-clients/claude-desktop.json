@@ -1,0 +1,27 @@
+{
+  "_comment": [
+    "Claude Desktop. Merge the 'mcpServers' entry below into your claude_desktop_config.json:",
+    "  macOS   ~/Library/Application Support/Claude/claude_desktop_config.json",
+    "  Windows %APPDATA%\\Claude\\claude_desktop_config.json",
+    "  Linux   ~/.config/Claude/claude_desktop_config.json",
+    "Use an ABSOLUTE path for --config: the server is started with an unspecified working",
+    "directory. Restart Claude Desktop after editing. The server's own output goes to stderr,",
+    "which Claude Desktop collects in its MCP logs; that is where a failure to start shows up.",
+    "Until the package is published, see ../README.md for the equivalent entry that runs this",
+    "repository's build directly."
+  ],
+  "mcpServers": {
+    "mqtt-intelligence": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@kadeya/mqtt-intel-mcp",
+        "--config",
+        "/absolute/path/to/mqtt-intelligence.yaml"
+      ],
+      "env": {
+        "MQTT_PASSWORD": "set-me-or-remove-this-block"
+      }
+    }
+  }
+}

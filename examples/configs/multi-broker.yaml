@@ -1,0 +1,74 @@
+# Several brokers at once, each with its own credentials, policy and connection moment.
+#
+# Brokers are independent: one refusing its credentials, or being unreachable, never stops the
+# others. Tools take a "broker" argument; when more than one is configured and the argument is
+# missing, the server answers BROKER_AMBIGUOUS and names the ids rather than guessing.
+version: 1
+
+brokers:
+  # Production. Connected as soon as the server starts, so the first question is fast.
+  factory-fr:
+    url: mqtts://fr.broker.example.com:8883
+    connect: startup
+    auth:
+      username: mcp-reader
+      password:
+        env: MQTT_FR_PASSWORD
+    discovery:
+      filters:
+        - factory/#
+    security:
+      read:
+        allow:
+          - factory/#
+        deny:
+          - factory/+/+/credentials/#
+
+  factory-de:
+    url: mqtts://de.broker.example.com:8883
+    connect: startup
+    auth:
+      username: mcp-reader
+      password:
+        env: MQTT_DE_PASSWORD
+    discovery:
+      filters:
+        - werk/#
+    security:
+      read:
+        allow:
+          - werk/#
+
+  # A staging broker nobody asks about most days. "lazy" means it is connected on first use,
+  # so a broker that is down does not produce connection noise until someone needs it.
+  staging:
+    url: mqtt://staging.internal:1883
+    connect: lazy
+    clientId:
+      prefix: mqtt-intel-staging
+    discovery:
+      filters:
+        - '#'
+      # Broker statistics are useful on a staging box and must be asked for by name, because
+      # "#" never matches a $-prefixed topic.
+      includeSysTopics: true
+    security:
+      read:
+        allow:
+          - '#'
+
+# Global rules, merged with each broker's own. A deny here cannot be undone by a broker.
+security:
+  read:
+    deny:
+      - '$SYS/broker/clients/+/+'
+
+limits:
+  # Three brokers share one catalogue and one message store, so the bounds are per deployment,
+  # not per broker.
+  maxTopicsPerBroker: 100000
+  recentMessagesPerTopic: 20
+
+logging:
+  level: info
+  format: json

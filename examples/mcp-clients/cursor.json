@@ -1,0 +1,17 @@
+{
+  "_comment": [
+    "Cursor. Save as .cursor/mcp.json in a project, or ~/.cursor/mcp.json for every project.",
+    "Cursor uses the same shape as Claude Desktop. Use an absolute path for --config."
+  ],
+  "mcpServers": {
+    "mqtt-intelligence": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@kadeya/mqtt-intel-mcp",
+        "--config",
+        "/absolute/path/to/mqtt-intelligence.yaml"
+      ]
+    }
+  }
+}

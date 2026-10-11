@@ -1,0 +1,59 @@
+# One broker, with the read policy an MQTT Intelligence deployment should start from.
+#
+# Every value below that is not a credential is also a default, except the read policy: the
+# shipped default allows "#", which is the right default for a first run on a laptop and the
+# wrong one for anything else. Narrow it.
+version: 1
+
+brokers:
+  factory-fr:
+    url: mqtts://broker.example.com:8883
+    auth:
+      # A username is not a secret, so it may be written here.
+      username: mcp-reader
+      # A password is. It is referenced, never embedded, so this file can be committed.
+      password:
+        env: MQTT_PASSWORD
+
+    # Ask the broker only for what this deployment is meant to see. The server computes a
+    # minimal covering set from these filters, so overlapping entries cost nothing.
+    discovery:
+      filters:
+        - factory/#
+        - site/+/status
+      # "#" never matches $-prefixed topics, so broker statistics must be asked for by name.
+      includeSysTopics: false
+
+    security:
+      read:
+        allow:
+          - factory/#
+          - site/+/status
+        # Deny beats allow, always. A denied topic is dropped at ingest: never stored, never
+        # counted, never listed.
+        # "#" is only ever the last level of a filter, so a blanket "anything called
+        # provisioning" cannot be written: name the levels.
+        deny:
+          - factory/+/+/credentials/#
+          - factory/+/provisioning/#
+
+# The broker's own ACLs remain the authoritative control. This file is a second lock, not the
+# first one: give the server an account that cannot read anything it should not.
+security:
+  redaction:
+    jsonKeys:
+      - password
+      - token
+      - secret
+      - apikey
+      - api_key
+      - authorization
+      - credential
+      - credentials
+      - passphrase
+      - privatekey
+      - private_key
+
+logging:
+  level: info
+  format: json

@@ -1,0 +1,42 @@
+# A broker and a fictional production line, in two containers.
+#
+#   docker compose up -d --wait
+#   npx @kadeya/mqtt-intel-mcp check --config examples/industrial-machine/mqtt-intelligence.yaml
+#
+# Port 1883 is published on the host so the MCP server, which runs on the host next to your
+# MCP client, can reach it. If something already listens there, change the host side of the
+# mapping and the URL in mqtt-intelligence.yaml together.
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: mqtt-intel-example-broker
+    ports:
+      # A machine that already runs a broker — many developers' do — can move the host side
+      # with MQTT_EXAMPLE_HOST_PORT. Change the URL in mqtt-intelligence.yaml to match: a
+      # server that quietly connects to the wrong broker looks like a server that sees
+      # nothing.
+      - '${MQTT_EXAMPLE_HOST_PORT:-1883}:1883'
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    healthcheck:
+      # mosquitto_sub ships in the image: a broker that answers a subscription is up.
+      test: ['CMD', 'mosquitto_sub', '-h', 'localhost', '-t', '$$SYS/#', '-C', '1', '-W', '3']
+      interval: 3s
+      timeout: 5s
+      retries: 10
+      start_period: 2s
+
+  simulator:
+    build:
+      context: ./simulator
+    container_name: mqtt-intel-example-simulator
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    environment:
+      MQTT_URL: mqtt://mosquitto:1883
+      # Short enough that the scripted incident happens while you are still looking.
+      SIMULATOR_INCIDENT_INTERVAL_SECONDS: '${SIMULATOR_INCIDENT_INTERVAL_SECONDS:-180}'
+      SIMULATOR_INCIDENT_DURATION_SECONDS: '${SIMULATOR_INCIDENT_DURATION_SECONDS:-25}'
+      SIMULATOR_SEED: '${SIMULATOR_SEED:-20260101}'
+    restart: unless-stopped
