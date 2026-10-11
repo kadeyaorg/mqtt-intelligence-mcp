@@ -53,11 +53,18 @@ describe('an engine pointed at a broker', () => {
 
   beforeAll(async () => {
     broker = await startMosquitto();
+
+    // Retained BEFORE anyone subscribes, so that its delivery really is a replay. Published
+    // after, it would be an ordinary live message that happens to carry the retain flag, and
+    // the two must not be confused: see retained.integration.test.ts.
+    await publishMessages(broker.url, [
+      { topic: 'factory/line-01/plc/state', payload: 'RUNNING', retain: true },
+    ]);
+
     engine = await engineFor(broker);
     await engine.start();
 
     await publishMessages(broker.url, [
-      { topic: 'factory/line-01/plc/state', payload: 'RUNNING', retain: true },
       { topic: 'factory/line-01/robot/status', payload: '{"ready":true,"errorCode":0}' },
       { topic: 'factory/line-01/robot/status', payload: '{"ready":false,"errorCode":42}' },
       { topic: 'factory/line-01/robot/position', payload: '{"x":12.4,"y":8.1}' },
