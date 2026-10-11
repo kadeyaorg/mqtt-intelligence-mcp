@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/kadeyaorg/mqtt-intelligence-mcp/security/advisories/new
+    about: Report it privately. Please do not open a public issue.
+  - name: Question or idea
+    url: https://github.com/kadeyaorg/mqtt-intelligence-mcp/discussions
+    about: For "how do I…", "is this the right tool for…", and anything not yet a bug.
+  - name: Documentation
+    url: https://github.com/kadeyaorg/mqtt-intelligence-mcp#readme
+    about: Configuration reference, the six tools, the security model and the threat model.

@@ -4,6 +4,10 @@
   "private": true,
   "description": "MCP server giving AI agents safe, structured and observable, read-only-by-default access to MQTT infrastructures.",
   "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "type": "module",
   "repository": {
     "type": "git",
@@ -35,7 +39,10 @@
   "files": [
     "dist",
     "src",
-    "!**/*.tsbuildinfo"
+    "!**/*.tsbuildinfo",
+    "LICENSE",
+    "NOTICE",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": "^22.12.0 || >=24.0.0"

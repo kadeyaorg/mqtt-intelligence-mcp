@@ -1,6 +1,6 @@
 # 05 — V0.1 implementation plan
 
-> Status: **Approved on 2026-09-18.** Decisions are recorded in the [ADRs](../adr/README.md), which prevail over this document where they differ.
+> Status: **Approved on 2026-09-18. Steps 0 to 14 delivered on 2026-10-11**, one pull request each. Decisions are recorded in the [ADRs](../adr/README.md), which prevail over this document where they differ. What V0.1 actually ships, and how its acceptance criteria stand, is in [04-scope-v0.1.md](04-scope-v0.1.md); the remaining release step is in [releasing.md](../releasing.md).
 
 Each step is a small pull request that **compiles, passes lint and tests, and leaves the
 repository releasable**. "Verify" lists what proves the step is done. Steps are ordered by

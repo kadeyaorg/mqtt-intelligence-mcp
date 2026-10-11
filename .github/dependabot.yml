@@ -26,3 +26,10 @@ updates:
     groups:
       github-actions:
         patterns: ['*']
+
+  # The example simulator's base image. It is never published, but a stale base image in an
+  # example is still what a reader copies.
+  - package-ecosystem: docker
+    directory: /examples/industrial-machine/simulator
+    schedule:
+      interval: weekly
