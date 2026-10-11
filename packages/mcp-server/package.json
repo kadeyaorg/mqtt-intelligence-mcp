@@ -29,6 +29,9 @@
     },
     "./package.json": "./package.json"
   },
+  "bin": {
+    "mqtt-intel-mcp": "dist/cli/bin.js"
+  },
   "files": [
     "dist",
     "src",
