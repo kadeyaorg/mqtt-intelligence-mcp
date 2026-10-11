@@ -8,6 +8,8 @@ Use GitHub's private vulnerability reporting: the **Security** tab of this repos
 then **Report a vulnerability**. It is private to the maintainers, and it gives us a place to
 work with you on a fix and a coordinated disclosure.
 
+If you would rather not use GitHub, or do not have an account, email **christophe@kadeya.com**.
+
 Please include what you would want to receive: what the issue is, how to reproduce it, what
 an attacker gains, and the version or commit you tested. A proof of concept helps; a working
 exploit is not required.

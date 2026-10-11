@@ -21,16 +21,12 @@ review comments — and whenever someone is representing the project in public.
 
 ## Reporting
 
-Report a concern privately to the maintainers. Do not open a public issue about someone's
+Report a concern privately to **christophe@kadeya.com**. Do not open a public issue about someone's
 conduct: it rarely helps the person reporting, and it never helps the person reported.
 
 The maintainers will respond, keep the report confidential, and say what action they took.
 Maintainers who do not follow or enforce this code in good faith can expect consequences
 decided by the project's leadership.
-
-> **Maintainers:** the contact address for conduct reports belongs here. Until one is
-> published on the [Kadeya organisation profile](https://github.com/kadeyaorg), reports can be
-> raised through the private channel described in [SECURITY.md](SECURITY.md).
 
 ## Attribution
 
