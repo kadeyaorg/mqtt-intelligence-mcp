@@ -264,8 +264,10 @@ export class SubscriptionManager {
     const qos = this.#qosFor(filter);
     const options: SubscribeOptions = {
       qos,
-      // MQTT 5 only: see the publisher's retain flag rather than a replay marker.
-      retainAsPublished: true,
+      // MQTT 5 only, and deliberately off. See the note in the mqtt.js adapter: with it on,
+      // a live publish of a retained state topic is indistinguishable from a replay, and a
+      // whole live subtree reads as dead.
+      retainAsPublished: false,
     };
 
     const outcome = await this.#connection.subscribe(filter, options);

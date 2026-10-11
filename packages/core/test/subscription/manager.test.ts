@@ -77,7 +77,7 @@ describe('acquiring a lease', () => {
     expect(lease).toMatchObject({ owner: 'discovery', filter: 'factory/#', active: true });
     expect(manager.brokerFilters).toEqual(['factory/#']);
     expect(transports.last.subscriptions).toEqual([
-      { filter: 'factory/#', options: { qos: 1, retainAsPublished: true } },
+      { filter: 'factory/#', options: { qos: 1, retainAsPublished: false } },
     ]);
   });
 

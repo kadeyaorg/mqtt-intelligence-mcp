@@ -280,7 +280,23 @@ export class MqttJsTransport implements MqttTransport {
       qos: options.qos,
       ...(this.#options.protocolVersion === 5
         ? {
-            rap: options.retainAsPublished ?? true,
+            // Retain As Published defaults to OFF, which is also the protocol default, and
+            // changing it back would be a bug rather than an improvement.
+            //
+            // With it on, the broker forwards the publisher's retain flag on every delivery.
+            // That sounds like more information, and it costs the only one that matters: a
+            // delivery marked retained is then either a replay at subscribe time or a live
+            // publish of a state topic, and nothing distinguishes them. Since replays are
+            // excluded from liveness and rate statistics (ADR-0011), every retained state
+            // topic — the commonest pattern there is in industrial MQTT — reads as a topic
+            // that has never published. Measured against a real production line: 33 of 46
+            // actively publishing topics reported "last live never".
+            //
+            // Off, the flag means what the specification says it means on a forwarded
+            // message: this one was replayed at subscribe time. That is exactly the
+            // distinction the engine is built on, and it also makes MQTT 5 behave like
+            // MQTT 3.1.1, which never had the option.
+            rap: options.retainAsPublished ?? false,
             ...(options.retainHandling === undefined ? {} : { rh: options.retainHandling }),
           }
         : {}),
