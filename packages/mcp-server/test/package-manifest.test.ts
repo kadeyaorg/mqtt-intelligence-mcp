@@ -54,3 +54,11 @@ describe('workspace wiring', () => {
     expect(core).toBeTypeOf('object');
   });
 });
+
+describe('the command-line entry point', () => {
+  it('is published as a single bin, so "npx @kadeya/mqtt-intel-mcp" resolves it', async () => {
+    const manifest = await readManifest();
+
+    expect(manifest['bin']).toEqual({ 'mqtt-intel-mcp': 'dist/cli/bin.js' });
+  });
+});

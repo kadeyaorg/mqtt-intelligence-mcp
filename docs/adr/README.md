@@ -26,5 +26,6 @@ Statuses: `Proposed` → `Accepted` | `Rejected`; later `Deprecated` or `Superse
 | [0015](0015-observability-ports.md)                   | Observability through logger and metrics ports, OTel-aligned          | Accepted |
 | [0016](0016-toolchain.md)                             | Toolchain: npm workspaces, tsc, Vitest, ESLint, Testcontainers        | Accepted |
 | [0017](0017-license.md)                               | Apache-2.0 license                                                    | Accepted |
+| [0018](0018-cli-contract.md)                          | The CLI writes to stderr; exit codes are part of the contract         | Accepted |
 
 New ADRs: copy [template.md](template.md).
