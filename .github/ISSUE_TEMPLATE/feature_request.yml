@@ -1,0 +1,40 @@
+name: Feature request
+description: Something the server should be able to do and cannot.
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before writing: the [roadmap](https://github.com/kadeyaorg/mqtt-intelligence-mcp#roadmap)
+        and the [V0.1 scope](https://github.com/kadeyaorg/mqtt-intelligence-mcp/blob/main/docs/proposal/04-scope-v0.1.md)
+        list what is planned and what is deliberately excluded. Finding it there is a faster
+        answer than an issue.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: |
+        What are you trying to find out, or do, that you cannot? Describe the situation rather
+        than the feature — a good description often has a solution we had not thought of.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you have in mind
+      description: A tool, an option, a behaviour. Rough is fine.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you tried instead
+      description: Including anything that nearly worked, and why it did not.
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Scope
+      description: |
+        The core carries no industrial business logic, no broker-specific code, no LLM and no
+        publish path in this version. Features that need those arrive as separate packages or
+        later versions.
+      options:
+        - label: I read the roadmap and this is not already planned.

@@ -13,57 +13,62 @@
 
 ### Engine (`@kadeya/mqtt-intel-core`)
 
-- [ ] Configuration: YAML + zod, secret references (`env`, `file`), env-only quick start,
+- [x] Configuration: YAML + zod, secret references (`env`, `file`), env-only quick start,
       unknown-key rejection, precise error messages.
-- [ ] Topic domain: validation, matching, `covers`, `intersects` (property-tested).
-- [ ] Multi-broker registry; connection state machine with timeouts, exponential backoff with
+- [x] Topic domain: validation, matching, `covers`, `intersects` (property-tested).
+- [x] Multi-broker registry; connection state machine with timeouts, exponential backoff with
       jitter, no automatic retry after authentication failure, graceful close.
-- [ ] MQTT 3.1.1 and 5; TCP, TLS, mTLS, WebSockets (`ws`/`wss`); username/password.
-- [ ] Subscription manager: leases, minimal covering set, per-filter SUBACK handling,
+- [x] MQTT 3.1.1 and 5; TCP, TLS, mTLS, WebSockets (`ws`/`wss`); username/password.
+- [x] Subscription manager: leases, minimal covering set, per-filter SUBACK handling,
       resubscription after reconnect.
-- [ ] Read policy (allow/deny, deny precedence) with ingest-time filtering; JSON key redaction.
-- [ ] Bounded ingest pipeline (ADR-0009) with every budget and counter.
-- [ ] Passive discovery with observation coverage and gaps.
-- [ ] `TopicCatalog` and `MessageStore` ports, memory implementations, contract test suite.
-- [ ] Payload classification and LLM-safe views.
-- [ ] Topic statistics: counts, bytes, delivered QoS, retained state, payload kinds, EWMA rate,
+- [x] Read policy (allow/deny, deny precedence) with ingest-time filtering; JSON key redaction.
+- [x] Bounded ingest pipeline (ADR-0009) with every budget and counter.
+- [x] Passive discovery with observation coverage and gaps.
+- [x] `TopicCatalog` and `MessageStore` ports, memory implementations, contract test suite.
+- [x] Payload classification and LLM-safe views.
+- [x] Topic statistics: counts, bytes, delivered QoS, retained state, payload kinds, EWMA rate,
       inter-arrival statistics.
-- [ ] Queries: broker status, discovery summary, topic tree, search (filter + substring +
+- [x] Queries: broker status, discovery summary, topic tree, search (filter + substring +
       sort + cursor), describe (without schema), recent messages.
-- [ ] `Answer` envelope with facts, observations, coverage and limitations.
-- [ ] Typed errors with stable codes; sanitization.
-- [ ] Logger (JSON on stderr, redaction) and metrics port (no-op default).
+- [x] `Answer` envelope with facts, observations, coverage and limitations.
+- [x] Typed errors with stable codes; sanitization.
+- [x] Logger (JSON on stderr, redaction) and metrics port (no-op default).
 
 ### MCP server (`@kadeya/mqtt-intel-mcp`)
 
-- [ ] SDK v2, stdio transport.
-- [ ] Six tools: `mqtt_list_brokers`, `mqtt_discover_topics`, `mqtt_topic_tree`,
+- [x] SDK v2, stdio transport.
+- [x] Six tools: `mqtt_list_brokers`, `mqtt_discover_topics`, `mqtt_topic_tree`,
       `mqtt_search_topics`, `mqtt_describe_topic`, `mqtt_get_recent_messages`.
-- [ ] Input/output schemas, `structuredContent`, compact text renderings, annotations,
+- [x] Input/output schemas, `structuredContent`, compact text renderings, annotations,
       progress and cancellation for `mqtt_discover_topics`.
-- [ ] Error mapping; audit log per tool call.
-- [ ] CLI: default `serve`, `check` (validate config + test each broker's connectivity and
+- [x] Error mapping; audit log per tool call.
+- [x] CLI: default `serve`, `check` (validate config + test each broker's connectivity and
       discovery subscription), `--config`, `--version`, `--help` (`node:util` `parseArgs`).
-- [ ] Graceful shutdown on SIGINT, SIGTERM and stdin close.
+- [x] Graceful shutdown on SIGINT, SIGTERM and stdin close.
 
 ### Repository and developer experience
 
-- [ ] Monorepo, strict TypeScript, ESLint with module boundaries, Prettier, Vitest.
-- [ ] CI: lint, typecheck, unit tests (Linux/Windows/macOS), integration tests with
+- [x] Monorepo, strict TypeScript, ESLint with module boundaries, Prettier, Vitest.
+- [x] CI: lint, typecheck, unit tests (Linux/Windows/macOS), integration tests with
       Mosquitto (Linux); blocking on Node 22/24 (LTS), Node 26 experimental and non-blocking.
-- [ ] `examples/industrial-machine`: Docker Compose (Mosquitto + fictional factory simulator
+- [x] `examples/industrial-machine`: Docker Compose (Mosquitto + fictional factory simulator
       with a reproducible "robot error" incident) and a ready-to-use config.
-- [ ] `examples/configs`: single broker, multi-broker, TLS/mTLS, AWS IoT Core,
+- [x] `examples/configs`: single broker, multi-broker, TLS/mTLS, AWS IoT Core,
       Azure Event Grid MQTT.
-- [ ] `examples/mcp-clients`: Claude Desktop, Claude Code, Cursor, VS Code snippets.
-- [ ] `.env.example`.
-- [ ] Docs: README (the nine sections requested), `architecture.md`, `configuration.md`,
-      `security.md` (threat model), `mcp-tools.md`, `discovery.md`, `storage.md`,
-      `observability.md`, ADRs.
-- [ ] LICENSE, NOTICE, CONTRIBUTING (DCO), CODE_OF_CONDUCT (Contributor Covenant),
+- [x] `examples/mcp-clients`: Claude Desktop, Claude Code, Cursor, VS Code snippets.
+- [x] `.env.example`.
+- [x] Docs: README (the nine sections requested), `architecture.md`, `configuration.md`,
+      `security.md` (threat model), `mcp-tools.md`, `observability.md`, `releasing.md`, ADRs.
+      Discovery and storage are documented in ADR-0007, ADR-0008 and ADR-0009 and in the
+      architecture document; separate pages would have duplicated them and drifted.
+- [x] LICENSE, NOTICE, CONTRIBUTING (DCO), CODE_OF_CONDUCT (Contributor Covenant),
       SECURITY.md (private reporting through GitHub advisories), CHANGELOG (Changesets),
       issue and PR templates, CODEOWNERS, Dependabot/Renovate, CodeQL.
-- [ ] Release 0.1.0 to npm with provenance.
+- [ ] Release 0.1.0 to npm with provenance. **Prepared, not done:** Changesets, the release
+      workflow with provenance, and per-package LICENSE, NOTICE, README and CHANGELOG are in
+      place. Both packages stay `private` until the `@kadeya` npm organisation is confirmed
+      (ADR-0002), and the workflow refuses to publish while they are. See
+      [releasing.md](../releasing.md).
 
 ## 3. Explicitly out of scope for V0.1
 
@@ -101,6 +106,23 @@
 7. A read-denied subtree never appears in any tool output, even when `#` is subscribed.
 8. Binary, empty, invalid UTF-8, huge and deeply nested payloads all render safely.
 9. Zero `any`, zero lint warnings, all CI jobs green, coverage ≥ 90 % lines on `core`.
+
+### Where they stand (2026-10-11)
+
+| #   | Criterion                                                            | Status                                                                                                                                                   |
+| --- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `check` against the example stack in < 10 s                          | **Met.** 9 s from `compose up` to exit 0; `check` itself about 1 s.                                                                                      |
+| 2   | Quick start under five minutes from the README alone                 | **Met.** A clean clone, install, build, `compose up` and `check` took 26 s.                                                                              |
+| 3   | An agent answers the two questions and states its window             | **Met.** Asserted end to end against the example stack.                                                                                                  |
+| 4   | A 100,000-message burst stays within budget                          | **Partly.** Budgets, drop counters and eviction are asserted by unit tests; the burst itself has not been run and resident memory has not been measured. |
+| 5   | Broker restart: connected → backoff → connected, gap in coverage     | **Met.** Integration test against a restarted Mosquitto.                                                                                                 |
+| 6   | Wrong password: failed, no retry loop, no secret in logs             | **Met.** Integration test, with stderr captured and asserted.                                                                                            |
+| 7   | A read-denied subtree appears in no output                           | **Met.** Asserted against the example stack while the topic is being published.                                                                          |
+| 8   | Binary, empty, invalid UTF-8, huge and nested payloads render safely | **Met.** Unit and property tests.                                                                                                                        |
+| 9   | Zero `any`, zero lint warnings, CI green, core lines ≥ 90 %          | **Met.** `npm run test:coverage:core`: **94.96 %** lines, 96.52 % functions, unit and integration together.                                              |
+
+Criterion 4 is the one outstanding measurement, and it needs a machine with a real broker and
+a load generator rather than a CI runner.
 
 ## 5. Revised roadmap
 

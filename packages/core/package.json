@@ -4,6 +4,10 @@
   "private": true,
   "description": "MQTT Intelligence engine: bounded discovery, topic catalog and safe payload views for MQTT infrastructures. Independent from MCP.",
   "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "type": "module",
   "repository": {
     "type": "git",
@@ -36,7 +40,10 @@
   "files": [
     "dist",
     "src",
-    "!**/*.tsbuildinfo"
+    "!**/*.tsbuildinfo",
+    "LICENSE",
+    "NOTICE",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": "^22.12.0 || >=24.0.0"

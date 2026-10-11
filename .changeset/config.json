@@ -1,0 +1,10 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
+  "changelog": ["@changesets/changelog-github", { "repo": "kadeyaorg/mqtt-intelligence-mcp" }],
+  "commit": false,
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": ["@kadeya/mqtt-intel-example-simulator"],
+  "privatePackages": { "version": true, "tag": false }
+}

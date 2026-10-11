@@ -1,0 +1,63 @@
+name: Bug report
+description: Something behaves differently from what it says it does.
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. The two most useful things you can give us are **what you
+        expected** and **what the server wrote to stderr** — everything it says goes there,
+        and that is where your MCP client collects it.
+
+        Please do not paste real credentials, hostnames or payloads. Redact them; the shape
+        of the data is what matters.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: |
+        Ideally against the example stack (`examples/industrial-machine`), which anyone can
+        run. If it only happens against your own broker, say which broker and version.
+      placeholder: |
+        1. docker compose -f examples/industrial-machine/docker-compose.yml up -d --wait
+        2. mqtt-intel-mcp check --config examples/industrial-machine/mqtt-intelligence.yaml
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Output
+      description: |
+        The server's stderr, and the exit code if a command exited. `logging.level: debug` in
+        the configuration gives considerably more.
+      render: text
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration
+      description: The relevant part of your configuration file, with secrets redacted.
+      render: yaml
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Server version (`mqtt-intel-mcp --version`), Node.js (`node --version`), OS, broker and its version.
+      placeholder: 'server 0.1.0, Node 24.4.0, macOS 15, Mosquitto 2.0.22'
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I removed credentials, real hostnames and real payload contents.
+          required: true
+        - label: I checked that this is not my broker's ACL refusing to deliver — `check` reports what a broker accepted, not what it will deliver.
