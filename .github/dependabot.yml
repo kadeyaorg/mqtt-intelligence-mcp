@@ -33,3 +33,9 @@ updates:
     directory: /examples/industrial-machine/simulator
     schedule:
       interval: weekly
+    ignore:
+      # Only LTS lines are supported (ADR-0001), and Dependabot cannot tell one from the
+      # other: it offered Node 25, a current line that is end-of-life the moment 26 ships.
+      # Major bumps of this image are a manual decision, taken when a line enters LTS.
+      - dependency-name: node
+        update-types: [version-update:semver-major]
