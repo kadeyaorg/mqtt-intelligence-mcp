@@ -2,7 +2,7 @@
 #
 # There is no build stage: Node runs the TypeScript source directly, so what the container
 # executes is the file you can read, with no compiled artefact in between.
-FROM node:25-alpine
+FROM node:24-alpine
 
 WORKDIR /simulator
 
