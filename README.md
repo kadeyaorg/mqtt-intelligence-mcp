@@ -155,6 +155,14 @@ engine only reports what it observed.
 
 The six tools, with their inputs and errors: [docs/mcp-tools.md](docs/mcp-tools.md).
 
+### A skill for the agent using them
+
+[`skills/mqtt-investigation`](skills/mqtt-investigation/README.md) teaches an agent **how** to
+use the six tools rather than what they do: the order to call them in, how to read the
+limitations, when the server is the wrong instrument and a raw capture is the right one, and
+the traps that have cost real time against real machines. It bundles the capture script those
+investigations kept needing.
+
 ## Facts, observations, limitations
 
 Every answer separates what was **observed directly** (counts, receipt times, delivered QoS,

@@ -22,5 +22,6 @@ old one, so the reasoning behind what was abandoned stays readable.
 ## Elsewhere in the repository
 
 - [examples/](../examples/README.md) — a fictional factory, five configurations, four MCP clients
+- [skills/mqtt-investigation/](../skills/mqtt-investigation/README.md) — how an agent should use the six tools, and the capture script for what they cannot do
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — how to work on this, and what a reviewer looks for
 - [SECURITY.md](../SECURITY.md) — reporting a vulnerability

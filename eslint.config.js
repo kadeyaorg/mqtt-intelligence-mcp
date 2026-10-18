@@ -147,6 +147,17 @@ export default defineConfig(
   },
 
   {
+    // A terminal tool a person runs by hand, not product code. The repository bans console
+    // because stdout carries MCP protocol frames in the server; here stdout IS the output,
+    // and there is no protocol to corrupt.
+    name: 'skills: bundled capture scripts print to the terminal',
+    files: ['skills/**/scripts/*.mjs'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+
+  {
     name: 'mcp-server: public core API only, no mqtt.js',
     files: ['packages/mcp-server/src/**/*.ts'],
     rules: {
