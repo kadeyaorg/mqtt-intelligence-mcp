@@ -16,7 +16,7 @@
  * topic per flush. Whatever is dropped is counted and reported, never silently lost.
  */
 import type { TopicDelta } from '../catalog/index.js';
-import { EMPTY_DISTRIBUTION, observeValue } from '../catalog/index.js';
+import { EMPTY_DISTRIBUTION, observeInterval, observeValue } from '../catalog/index.js';
 import type { Clock, Timer } from '../domain/clock.js';
 import { systemClock } from '../domain/clock.js';
 import type { BrokerId } from '../domain/ids.js';
@@ -92,6 +92,7 @@ interface TopicAccumulator {
   maxPayloadSize: number;
   qosCounts: [number, number, number];
   interArrival: typeof EMPTY_DISTRIBUTION;
+  intervalBuckets: readonly number[] | undefined;
   retainedState: 'present' | 'cleared' | undefined;
   /** The latest payload of this topic, not copied yet. */
   pending: InboundMessage | undefined;
@@ -233,7 +234,9 @@ export class IngestPipeline {
       accumulator.liveCount += 1;
       const previous = this.#lastLiveAt.get(topic);
       if (previous !== undefined) {
-        accumulator.interArrival = observeValue(accumulator.interArrival, at - previous);
+        const gap = at - previous;
+        accumulator.interArrival = observeValue(accumulator.interArrival, gap);
+        accumulator.intervalBuckets = observeInterval(accumulator.intervalBuckets, gap);
       }
       accumulator.lastLiveAt = at;
       this.#rememberLiveArrival(topic, at);
@@ -304,6 +307,9 @@ export class IngestPipeline {
         inspectedCount,
         liveCount: accumulator.liveCount,
         interArrival: accumulator.interArrival,
+        ...(accumulator.intervalBuckets === undefined
+          ? {}
+          : { intervalBuckets: accumulator.intervalBuckets }),
       });
     }
 
@@ -356,6 +362,7 @@ export class IngestPipeline {
       maxPayloadSize: 0,
       qosCounts: [0, 0, 0],
       interArrival: EMPTY_DISTRIBUTION,
+      intervalBuckets: undefined,
       retainedState: undefined,
       pending: undefined,
       pendingAt: at,

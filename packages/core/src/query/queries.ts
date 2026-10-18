@@ -13,11 +13,11 @@ import type {
   TopicTreeNode,
   TreeQuery,
 } from '../catalog/index.js';
-import { decayRate, silenceRatio, standardDeviation } from '../catalog/index.js';
+import { decayRate, intervalGroups, silenceRatio, standardDeviation } from '../catalog/index.js';
 import type { BrokerId } from '../domain/ids.js';
 import type { QoS } from '../domain/mqtt.js';
 import type { TopicName } from '../domain/topic.js';
-import type { PayloadKindCounts, RetainedState } from '../catalog/index.js';
+import type { IntervalGroup, PayloadKindCounts, RetainedState } from '../catalog/index.js';
 import type { MessageProperties } from '../domain/mqtt.js';
 import type { PayloadView, PayloadViewOptions } from '../payload/index.js';
 import { toPayloadView } from '../payload/index.js';
@@ -80,6 +80,14 @@ export interface TopicObservations {
   /** How that number was produced, so it is never mistaken for a raw count. */
   readonly rateMethod: string;
   readonly interArrival?: IntervalObservation;
+  /**
+   * Groups of inter-arrival times, reported only when there is more than one.
+   *
+   * Two groups mean the gaps fall into two populations — a short one and a long one — which
+   * a topic published once per cycle does not have. What produces them is not something
+   * arrival times can settle, so nothing here says why.
+   */
+  readonly intervalGroups?: readonly IntervalGroup[];
   readonly silence?: {
     readonly forMs: number;
     /** How many typical intervals of silence this is. */
@@ -152,6 +160,7 @@ export function toTopicObservations(record: TopicRecord, now: number): TopicObse
   const interArrival = record.interArrival;
   const ratio = silenceRatio(record, now);
   const deviation = standardDeviation(interArrival);
+  const groups = intervalGroups(record.intervalBuckets);
 
   return {
     messagesPerSecond: decayRate(record.rate, now).perSecond,
@@ -168,6 +177,7 @@ export function toTopicObservations(record: TopicRecord, now: number): TopicObse
             ...(deviation === undefined ? {} : { standardDeviationMs: deviation }),
           },
         }),
+    ...(groups.length === 0 ? {} : { intervalGroups: groups }),
     ...(ratio === undefined || record.lastLiveAt === undefined
       ? {}
       : {

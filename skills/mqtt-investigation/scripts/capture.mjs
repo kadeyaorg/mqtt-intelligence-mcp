@@ -239,8 +239,8 @@ async function gaps(url, topic, seconds) {
     );
     console.log(
       movement > (lowStats.p50 + highStats.p50) / 10
-        ? '    The offset is drifting: suspect two publishers with independent clocks.'
-        : '    The offset is stable: one clock, so one sweep publishing the topic twice.',
+        ? '    The offset drifts, which two independent clocks do and one does not.'
+        : '    The offset holds, which is what a single clock looks like. Two publishers would drift apart.',
     );
   }
   console.log(`\n  short gaps in order: ${shortInOrder.join(' ')}`);

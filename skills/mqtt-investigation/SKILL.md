@@ -122,9 +122,15 @@ small standard deviation against the mean — a 1500 ms cycle with a 45 ms devia
 machine behaving itself. Then compare against its neighbours in the same subsystem: "normal"
 is defined by the machine, not by you.
 
-**A standard deviation close to or above the mean is not noise, it is a second mode.** A mean
-of 749 ms with a deviation of 595 ms means the topic is publishing in pairs, not irregularly.
-Go to a `gaps` capture and look at the distribution; you will usually find two clusters.
+**Read `intervalGroups` before reaching for anything else.** When the gaps fall into more
+than one population the observation says so directly — "intervals fall into 2 groups:
+64 ms–256 ms (20), 1.0 s–2.0 s (19)" — and a topic published once per cycle has one group.
+That is a fact about the distribution and nothing more: two publishers, one loop publishing
+twice and a retry all look the same from here. A `gaps` capture is what narrows it, by
+showing whether the offset between the groups drifts.
+
+A standard deviation close to or above the mean points the same way, and is what you have to
+fall back on when there are too few intervals for groups to be reported.
 
 ### Why does this topic publish more than once per cycle?
 

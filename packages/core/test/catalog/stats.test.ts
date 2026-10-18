@@ -7,9 +7,15 @@ import {
   createRecord,
   decayRate,
   EMPTY_DISTRIBUTION,
+  INTERVAL_BUCKET_COUNT,
+  intervalBucketOf,
+  intervalBucketRange,
+  intervalGroups,
   mergeDistributions,
+  mergeIntervalBuckets,
   mergeRates,
   mergeRecords,
+  observeInterval,
   observeRate,
   observeValue,
   parseBrokerId,
@@ -230,5 +236,144 @@ describe('merging is independent of how the traffic was grouped', () => {
         },
       ),
     );
+  });
+});
+
+describe('inter-arrival buckets', () => {
+  it('puts a value in the power-of-two bucket that contains it', () => {
+    expect(intervalBucketOf(1)).toBe(0);
+    expect(intervalBucketOf(150)).toBe(7);
+    expect(intervalBucketRange(7)).toEqual({ fromMs: 128, toMs: 256 });
+    expect(intervalBucketOf(1350)).toBe(10);
+  });
+
+  it('clamps anything below a millisecond or beyond the last bucket', () => {
+    expect(intervalBucketOf(0)).toBe(0);
+    expect(intervalBucketOf(-5)).toBe(0);
+    expect(intervalBucketOf(Number.POSITIVE_INFINITY)).toBe(0);
+    expect(intervalBucketOf(2 ** 40)).toBe(INTERVAL_BUCKET_COUNT - 1);
+  });
+
+  it('merges element-wise, treating an absent histogram as empty', () => {
+    const left = observeInterval(observeInterval(undefined, 150), 150);
+    const right = observeInterval(undefined, 1350);
+
+    expect(mergeIntervalBuckets(left, undefined)).toBe(left);
+    expect(mergeIntervalBuckets(undefined, right)).toBe(right);
+    const merged = mergeIntervalBuckets(left, right) ?? [];
+    expect(merged[7]).toBe(2);
+    expect(merged[10]).toBe(1);
+  });
+
+  it('gives the same histogram however the intervals are split into batches', () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.integer({ min: 1, max: 200_000 }), { minLength: 1, maxLength: 60 }),
+        fc.integer({ min: 0, max: 60 }),
+        (intervals, cut) => {
+          const whole = intervals.reduce<readonly number[] | undefined>(
+            (buckets, value) => observeInterval(buckets, value),
+            undefined,
+          );
+          const split = Math.min(cut, intervals.length);
+          const build = (values: number[]) =>
+            values.reduce<readonly number[] | undefined>(
+              (buckets, value) => observeInterval(buckets, value),
+              undefined,
+            );
+          const merged = mergeIntervalBuckets(
+            build(intervals.slice(0, split)),
+            build(intervals.slice(split)),
+          );
+
+          expect(merged).toEqual(whole);
+        },
+      ),
+    );
+  });
+});
+
+describe('grouping inter-arrival times', () => {
+  /** Builds a histogram from a list of intervals, as ingestion would. */
+  function histogramOf(values: readonly number[]): readonly number[] | undefined {
+    return values.reduce<readonly number[] | undefined>(
+      (buckets, value) => observeInterval(buckets, value),
+      undefined,
+    );
+  }
+
+  it('reports nothing for a topic with a single steady period', () => {
+    const steady = Array.from({ length: 40 }, () => 1500);
+
+    expect(intervalGroups(histogramOf(steady))).toEqual([]);
+  });
+
+  it('reports nothing when there is not enough to tell a pattern from jitter', () => {
+    expect(intervalGroups(histogramOf([150, 1350, 150, 1350]))).toEqual([]);
+    expect(intervalGroups(undefined)).toEqual([]);
+  });
+
+  it('finds the two groups of a topic published twice per cycle', () => {
+    // The real signature, from a production line: a short gap inside the cycle and a long
+    // one between cycles, in equal numbers.
+    const pairs = Array.from({ length: 20 }, () => [150, 1350]).flat();
+
+    const groups = intervalGroups(histogramOf(pairs));
+
+    expect(groups).toHaveLength(2);
+    expect(groups[0]).toMatchObject({ fromMs: 128, toMs: 256, count: 20 });
+    expect(groups[1]).toMatchObject({ fromMs: 1024, toMs: 2048, count: 20 });
+  });
+
+  it('does not split a single group spread over neighbouring buckets', () => {
+    // Jitter around 1500 ms straddles the 1024 and 2048 boundaries; that is one population.
+    const jittery = [1100, 1300, 1500, 1700, 1900, 2100, 2300, 1450, 1550, 1600, 1700, 1800];
+
+    expect(intervalGroups(histogramOf(jittery))).toEqual([]);
+  });
+
+  it('ignores a group too small to be worth a sentence', () => {
+    // One stray long gap among forty short ones is a hiccup, not a second population.
+    const mostlyShort = [...Array.from({ length: 40 }, () => 150), 100_000];
+
+    expect(intervalGroups(histogramOf(mostlyShort))).toEqual([]);
+  });
+});
+
+describe('grouping survives the mess of a real distribution', () => {
+  function histogramOf(values: readonly number[]): readonly number[] | undefined {
+    return values.reduce<readonly number[] | undefined>(
+      (buckets, value) => observeInterval(buckets, value),
+      undefined,
+    );
+  }
+
+  it('is not welded into one group by a single stray interval between the two', () => {
+    // Measured on a real line: short gaps straddle two buckets, long gaps sit in a third,
+    // and one reconnection drops a message, leaving a gap that lands between them.
+    const measured = [
+      121, 1357, 182, 1308, 188, 1354, 122, 1353, 183, 1305, 198, 1356, 128, 1360, 122, 1335, 167,
+      1387, 124, 1333, 151, 1349, 150, 1348,
+    ];
+
+    const clean = intervalGroups(histogramOf(measured));
+    const withOutlier = intervalGroups(histogramOf([...measured, 700]));
+
+    expect(clean).toHaveLength(2);
+    // The stray 700 ms lands in the valley; one interval in forty-nine is noise, not a bridge.
+    expect(withOutlier).toHaveLength(2);
+    expect(withOutlier[0]?.fromMs).toBe(64);
+    expect(withOutlier[1]?.toMs).toBe(2048);
+  });
+
+  it('still joins the groups when the valley fills up for real', () => {
+    // A third of the intervals in the middle is not noise: the distribution really is spread.
+    const spread = [
+      ...Array.from({ length: 12 }, () => 150),
+      ...Array.from({ length: 12 }, () => 700),
+      ...Array.from({ length: 12 }, () => 1350),
+    ];
+
+    expect(intervalGroups(histogramOf(spread))).toEqual([]);
   });
 });
