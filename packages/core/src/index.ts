@@ -60,14 +60,21 @@ export type { Clock, Timer } from './domain/clock.js';
 
 export {
   classifyPayload,
+  countNodes,
   decodeUtf8,
   DEFAULT_HEX_PREVIEW_BYTES,
   DEFAULT_JSON_LIMITS,
   DEFAULT_MAX_INSPECT_BYTES,
   DEFAULT_MAX_TEXT_CHARS,
+  DEFAULT_SCHEMA_LIMITS,
+  EMPTY_SCHEMA,
   escapeControlCharacters,
   limitJson,
   looksBinary,
+  mergeSchemas,
+  observedTypes,
+  observeJson,
+  toJsonSchema,
   toPayloadView,
 } from './payload/index.js';
 export type {
@@ -82,6 +89,10 @@ export type {
   PayloadKind,
   PayloadView,
   PayloadViewOptions,
+  SchemaLimits,
+  SchemaNode,
+  SchemaTypeCounts,
+  SchemaTypeName,
   UninspectedReason,
 } from './payload/index.js';
 

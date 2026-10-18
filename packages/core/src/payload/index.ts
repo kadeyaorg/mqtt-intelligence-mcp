@@ -17,3 +17,14 @@ export {
   toPayloadView,
 } from './view.js';
 export type { PayloadView, PayloadViewOptions } from './view.js';
+
+export {
+  countNodes,
+  DEFAULT_SCHEMA_LIMITS,
+  EMPTY_SCHEMA,
+  mergeSchemas,
+  observedTypes,
+  observeJson,
+  toJsonSchema,
+} from './schema.js';
+export type { SchemaLimits, SchemaNode, SchemaTypeCounts, SchemaTypeName } from './schema.js';
