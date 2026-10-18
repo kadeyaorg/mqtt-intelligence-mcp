@@ -27,5 +27,6 @@ Statuses: `Proposed` → `Accepted` | `Rejected`; later `Deprecated` or `Superse
 | [0016](0016-toolchain.md)                             | Toolchain: npm workspaces, tsc, Vitest, ESLint, Testcontainers        | Accepted |
 | [0017](0017-license.md)                               | Apache-2.0 license                                                    | Accepted |
 | [0018](0018-cli-contract.md)                          | The CLI writes to stderr; exit codes are part of the contract         | Accepted |
+| [0019](0019-schema-as-counts.md)                      | An inferred schema is counts, and a wide object is a map              | Accepted |
 
 New ADRs: copy [template.md](template.md).

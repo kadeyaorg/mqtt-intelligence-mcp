@@ -13,7 +13,7 @@
 
 | Document                        | For                                                                 |
 | ------------------------------- | ------------------------------------------------------------------- |
-| [adr/](adr/README.md)           | Eighteen decisions, each with the alternatives that were rejected   |
+| [adr/](adr/README.md)           | Nineteen decisions, each with the alternatives that were rejected   |
 | [proposal/](proposal/README.md) | The design document: analysis, ecosystem, architecture, scope, plan |
 
 An ADR is immutable once accepted. A decision that changes gets a new ADR that supersedes the
