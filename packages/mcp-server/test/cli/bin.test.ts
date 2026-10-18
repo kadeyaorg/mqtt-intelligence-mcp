@@ -144,6 +144,7 @@ describe('serving over real stdio', () => {
         'mqtt_describe_topic',
         'mqtt_discover_topics',
         'mqtt_get_recent_messages',
+        'mqtt_infer_schema',
         'mqtt_list_brokers',
         'mqtt_search_topics',
         'mqtt_topic_tree',

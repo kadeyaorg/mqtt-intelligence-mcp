@@ -19,8 +19,8 @@ import type { QoS } from '../domain/mqtt.js';
 import type { TopicName } from '../domain/topic.js';
 import type { IntervalGroup, PayloadKindCounts, RetainedState } from '../catalog/index.js';
 import type { MessageProperties } from '../domain/mqtt.js';
-import type { PayloadView, PayloadViewOptions } from '../payload/index.js';
-import { toPayloadView } from '../payload/index.js';
+import type { PayloadView, PayloadViewOptions, SchemaField } from '../payload/index.js';
+import { flattenSchema, toPayloadView } from '../payload/index.js';
 import type { MessageStore, ObservedMessage } from '../store/index.js';
 
 export interface TopicSummary {
@@ -75,6 +75,14 @@ export interface IntervalObservation {
   readonly standardDeviationMs?: number;
 }
 
+export interface SchemaObservation {
+  /** Payloads folded into this shape. Ingestion samples, so this is not the message count. */
+  readonly payloadsInspected: number;
+  readonly fields: readonly SchemaField[];
+  /** True when a limit stopped inference somewhere inside.*/
+  readonly truncated: boolean;
+}
+
 export interface TopicObservations {
   readonly messagesPerSecond: number;
   /** How that number was produced, so it is never mistaken for a raw count. */
@@ -88,6 +96,13 @@ export interface TopicObservations {
    * arrival times can settle, so nothing here says why.
    */
   readonly intervalGroups?: readonly IntervalGroup[];
+  /**
+   * The shape of the JSON payloads inspected so far.
+   *
+   * A summary of what was seen, not a contract: a field with a presence below 1 was absent
+   * from some payloads, which is not the same as being optional by design.
+   */
+  readonly schema?: SchemaObservation;
   readonly silence?: {
     readonly forMs: number;
     /** How many typical intervals of silence this is. */
@@ -178,6 +193,15 @@ export function toTopicObservations(record: TopicRecord, now: number): TopicObse
           },
         }),
     ...(groups.length === 0 ? {} : { intervalGroups: groups }),
+    ...(record.schema === undefined || record.schema.seen === 0
+      ? {}
+      : {
+          schema: {
+            payloadsInspected: record.schema.seen,
+            fields: flattenSchema(record.schema),
+            truncated: record.schema.truncated === true,
+          },
+        }),
     ...(ratio === undefined || record.lastLiveAt === undefined
       ? {}
       : {

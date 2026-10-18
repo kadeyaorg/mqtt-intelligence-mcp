@@ -1,6 +1,6 @@
 # The six tools
 
-Six, not sixteen. Every tool definition costs room in the agent's context and dilutes its
+Seven, not seventeen. Every tool definition costs room in the agent's context and dilutes its
 choice between them, so each one here answers a question a person actually asks: what is out
 there, what does the namespace look like, where is this thing, what is this topic, what did it
 just say ([ADR-0012](adr/0012-mcp-sdk-v2-stdio-small-surface.md)).
@@ -127,6 +127,8 @@ Two groups is what a topic published twice per cycle looks like: a short gap ins
 and a long one between cycles. The answer reports that shape and not its cause, because
 arrival times cannot settle whether it is two publishers, one loop publishing twice, or a
 retry.
+mean, and the shape of the JSON payloads inspected so far — one line per field, with the share
+of payloads that carried it.
 
 A topic never observed returns `TOPIC_NOT_OBSERVED` with a hint, not an empty answer: an empty
 answer invites the conclusion that the topic does not exist.
@@ -145,6 +147,29 @@ safe payload view.
 
 The last message is exact. Older ones are a sample: ingestion keeps a bounded window, and the
 answer says so rather than implying a complete history.
+
+## `mqtt_infer_schema`
+
+| Input    | Type             | Notes                    |
+| -------- | ---------------- | ------------------------ |
+| `broker` | string           | Optional with one broker |
+| `topic`  | exact topic name | No wildcards             |
+
+The shape of a topic's JSON payloads, as a **JSON Schema** (draft 2020-12) ready to export and
+as a flat field list with the share of payloads that carried each field.
+
+The shape is inferred from the payloads that were inspected, and ingestion inspects a sample,
+so the answer says how many payloads are behind it. **It summarises what was seen; it is not a
+contract.** A field missing from `required` was absent from some payloads, which is not the
+same as being optional by design, and the schema says so in its own text.
+
+An object with more than 32 distinct keys is reported as a map through
+`additionalProperties`, because such an object is keyed by an identifier rather than being a
+record with a thousand fields. Nesting beyond six levels stops, and `SCHEMA_TRUNCATED` appears
+in the limitations.
+
+Use it to write code against a topic, or to compare a topic's shape with what it used to be —
+which is how a silently renamed field gets caught.
 
 ---
 

@@ -25,7 +25,8 @@ export type LimitationCode =
   | 'TOPICS_EVICTED'
   | 'SAMPLED'
   | 'TRUNCATED'
-  | 'RESULTS_TRUNCATED';
+  | 'RESULTS_TRUNCATED'
+  | 'SCHEMA_TRUNCATED';
 
 export interface Limitation {
   readonly code: LimitationCode;
@@ -123,6 +124,12 @@ export const SAMPLED_HISTORY_LIMITATION: Limitation = {
   code: 'SAMPLED',
   message:
     'Stored history is sampled at no more than one message per topic per flush interval. Message counts are exact and the last message is exact; the messages in between are a sample.',
+};
+
+export const SCHEMA_TRUNCATED_LIMITATION: Limitation = {
+  code: 'SCHEMA_TRUNCATED',
+  message:
+    'A limit stopped schema inference somewhere inside the payload: depth, the number of fields in one object, or the node budget. The real payload may hold more than the shape shows.',
 };
 
 export function truncatedResults(shown: number, total: number): Limitation {

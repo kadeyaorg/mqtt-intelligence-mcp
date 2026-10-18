@@ -12,7 +12,8 @@
  */
 import type { BrokerId } from '../domain/ids.js';
 import type { TopicName } from '../domain/topic.js';
-import type { PayloadKind } from '../payload/index.js';
+import type { PayloadKind, SchemaNode } from '../payload/index.js';
+import { mergeSchemas } from '../payload/index.js';
 import type { DistributionState, RateState } from './stats.js';
 import {
   createRate,
@@ -54,6 +55,8 @@ export interface TopicRecord {
   readonly interArrival: DistributionState;
   /** Those same intervals in power-of-two buckets; undefined means none counted yet. */
   readonly intervalBuckets?: readonly number[];
+  /** Shape of the JSON payloads inspected so far; absent until one was. */
+  readonly schema?: SchemaNode;
 }
 
 /**
@@ -80,6 +83,7 @@ export interface TopicDelta {
   /** Inter-arrival times measured within this delta. */
   readonly interArrival?: DistributionState;
   readonly intervalBuckets?: readonly number[];
+  readonly schema?: SchemaNode;
 }
 
 function addQos(left: QosCounts, right: QosCounts): QosCounts {
@@ -126,12 +130,24 @@ export function createRecord(
     rate,
     interArrival: delta.interArrival ?? EMPTY_DISTRIBUTION,
     ...(delta.intervalBuckets === undefined ? {} : { intervalBuckets: delta.intervalBuckets }),
+    ...(delta.schema === undefined ? {} : { schema: delta.schema }),
   };
 }
 
 /** Spreads the field only when there is one, which exactOptionalPropertyTypes requires. */
 function buckets(value: readonly number[] | undefined): { intervalBuckets?: readonly number[] } {
   return value === undefined ? {} : { intervalBuckets: value };
+}
+
+/** Merges two schemas when both exist, keeps the one that does, and omits the field when neither. */
+function schemaOf(
+  left: SchemaNode | undefined,
+  right: SchemaNode | undefined,
+): { schema?: SchemaNode } {
+  if (left === undefined) {
+    return right === undefined ? {} : { schema: right };
+  }
+  return { schema: right === undefined ? left : mergeSchemas(left, right) };
 }
 
 /** Folds a delta into an existing record. Order between deltas does not change the result. */
@@ -158,6 +174,7 @@ export function applyDelta(record: TopicRecord, delta: TopicDelta): TopicRecord 
     rate: observeRate(record.rate, delta.liveCount, delta.lastSeenAt),
     interArrival: mergeDistributions(record.interArrival, delta.interArrival ?? EMPTY_DISTRIBUTION),
     ...buckets(mergeIntervalBuckets(record.intervalBuckets, delta.intervalBuckets)),
+    ...schemaOf(record.schema, delta.schema),
   };
 }
 
@@ -185,6 +202,7 @@ export function mergeRecords(left: TopicRecord, right: TopicRecord): TopicRecord
     rate: mergeRates(left.rate, right.rate),
     interArrival: mergeDistributions(left.interArrival, right.interArrival),
     ...buckets(mergeIntervalBuckets(left.intervalBuckets, right.intervalBuckets)),
+    ...schemaOf(left.schema, right.schema),
   };
 }
 

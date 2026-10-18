@@ -24,8 +24,8 @@ import type { TopicName } from '../domain/topic.js';
 import { isTopicName } from '../domain/topic.js';
 import type { Logger, MetricsRecorder } from '../observability/index.js';
 import { noopLogger, noopMetrics } from '../observability/index.js';
-import type { PayloadKind } from '../payload/index.js';
-import { classifyPayload } from '../payload/index.js';
+import type { PayloadKind, SchemaNode } from '../payload/index.js';
+import { classifyWithValue, observeJson } from '../payload/index.js';
 import type { ReadPolicy } from '../policy/index.js';
 import type { TopicCatalog } from '../catalog/index.js';
 import type { MessageStore, ObservedMessage } from '../store/index.js';
@@ -93,6 +93,7 @@ interface TopicAccumulator {
   qosCounts: [number, number, number];
   interArrival: typeof EMPTY_DISTRIBUTION;
   intervalBuckets: readonly number[] | undefined;
+  schema: SchemaNode | undefined;
   retainedState: 'present' | 'cleared' | undefined;
   /** The latest payload of this topic, not copied yet. */
   pending: InboundMessage | undefined;
@@ -275,14 +276,20 @@ export class IngestPipeline {
       const pending = accumulator.pending;
       if (pending !== undefined) {
         const inspect = inspections < this.#limits.inspectionsPerFlush;
-        const classification = inspect
-          ? classifyPayload(pending.payload, { maxInspectBytes: this.#limits.maxInspectBytes })
-          : ({ kind: 'unknown', reason: 'budget-exhausted' } as const);
+        const inspected = inspect
+          ? classifyWithValue(pending.payload, { maxInspectBytes: this.#limits.maxInspectBytes })
+          : { classification: { kind: 'unknown', reason: 'budget-exhausted' } as const };
+        const classification = inspected.classification;
 
         if (inspect) {
           inspections += 1;
           inspectedCount = 1;
           payloadKinds[classification.kind] = 1;
+          if (inspected.json !== undefined) {
+            // The shape rides on the payloads that were going to be parsed anyway, so
+            // inference costs no extra parse and obeys the same inspection budget.
+            accumulator.schema = observeJson(accumulator.schema, inspected.json);
+          }
         } else {
           notInspected += 1;
         }
@@ -310,6 +317,7 @@ export class IngestPipeline {
         ...(accumulator.intervalBuckets === undefined
           ? {}
           : { intervalBuckets: accumulator.intervalBuckets }),
+        ...(accumulator.schema === undefined ? {} : { schema: accumulator.schema }),
       });
     }
 
@@ -363,6 +371,7 @@ export class IngestPipeline {
       qosCounts: [0, 0, 0],
       interArrival: EMPTY_DISTRIBUTION,
       intervalBuckets: undefined,
+      schema: undefined,
       retainedState: undefined,
       pending: undefined,
       pendingAt: at,
