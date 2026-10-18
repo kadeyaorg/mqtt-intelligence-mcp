@@ -412,6 +412,12 @@ function registerDescribeTopic(server: McpServer, engine: Engine, guard: Guard):
               standardDeviationMs: z.number().optional(),
             })
             .optional(),
+          intervalGroups: z
+            .array(z.object({ fromMs: z.number(), toMs: z.number(), count: z.number() }))
+            .optional()
+            .describe(
+              'Groups of inter-arrival times, present only when there is more than one. Separate groups mean the gaps fall into separate populations, which a topic published once per cycle does not have. What produces them is not something arrival times can settle.',
+            ),
           silence: z.object({ forMs: z.number(), ratioToMeanInterval: z.number() }).optional(),
         }),
       ),
@@ -445,6 +451,16 @@ function registerDescribeTopic(server: McpServer, engine: Engine, guard: Guard):
           observations?.interArrival === undefined
             ? ''
             : `  intervals: mean ${formatDuration(observations.interArrival.meanMs)}, min ${formatDuration(observations.interArrival.minMs)}, max ${formatDuration(observations.interArrival.maxMs)} (n=${formatCount(observations.interArrival.count)})`,
+          observations?.intervalGroups === undefined
+            ? ''
+            : `  intervals fall into ${formatCount(observations.intervalGroups.length)} groups: ${observations.intervalGroups
+                .map(
+                  (group) =>
+                    `${formatDuration(group.fromMs)}–${formatDuration(group.toMs)} (${formatCount(group.count)})`,
+                )
+                .join(
+                  ', ',
+                )}. A topic published once per cycle has one group; what produces the others is not something arrival times can settle.`,
           observations?.silence === undefined
             ? ''
             : `  silent for ${formatDuration(observations.silence.forMs)}, which is ${observations.silence.ratioToMeanInterval.toFixed(1)}× its usual interval`,

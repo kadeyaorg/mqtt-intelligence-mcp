@@ -18,6 +18,7 @@ import {
   createRate,
   EMPTY_DISTRIBUTION,
   mergeDistributions,
+  mergeIntervalBuckets,
   mergeRates,
   observeRate,
 } from './stats.js';
@@ -51,6 +52,8 @@ export interface TopicRecord {
   readonly rate: RateState;
   /** Inter-arrival times of live messages, in milliseconds. */
   readonly interArrival: DistributionState;
+  /** Those same intervals in power-of-two buckets; undefined means none counted yet. */
+  readonly intervalBuckets?: readonly number[];
 }
 
 /**
@@ -76,6 +79,7 @@ export interface TopicDelta {
   readonly liveCount: number;
   /** Inter-arrival times measured within this delta. */
   readonly interArrival?: DistributionState;
+  readonly intervalBuckets?: readonly number[];
 }
 
 function addQos(left: QosCounts, right: QosCounts): QosCounts {
@@ -121,7 +125,13 @@ export function createRecord(
     inspectedCount: delta.inspectedCount,
     rate,
     interArrival: delta.interArrival ?? EMPTY_DISTRIBUTION,
+    ...(delta.intervalBuckets === undefined ? {} : { intervalBuckets: delta.intervalBuckets }),
   };
+}
+
+/** Spreads the field only when there is one, which exactOptionalPropertyTypes requires. */
+function buckets(value: readonly number[] | undefined): { intervalBuckets?: readonly number[] } {
+  return value === undefined ? {} : { intervalBuckets: value };
 }
 
 /** Folds a delta into an existing record. Order between deltas does not change the result. */
@@ -147,6 +157,7 @@ export function applyDelta(record: TopicRecord, delta: TopicDelta): TopicRecord 
     inspectedCount: record.inspectedCount + delta.inspectedCount,
     rate: observeRate(record.rate, delta.liveCount, delta.lastSeenAt),
     interArrival: mergeDistributions(record.interArrival, delta.interArrival ?? EMPTY_DISTRIBUTION),
+    ...buckets(mergeIntervalBuckets(record.intervalBuckets, delta.intervalBuckets)),
   };
 }
 
@@ -173,6 +184,7 @@ export function mergeRecords(left: TopicRecord, right: TopicRecord): TopicRecord
     inspectedCount: left.inspectedCount + right.inspectedCount,
     rate: mergeRates(left.rate, right.rate),
     interArrival: mergeDistributions(left.interArrival, right.interArrival),
+    ...buckets(mergeIntervalBuckets(left.intervalBuckets, right.intervalBuckets)),
   };
 }
 

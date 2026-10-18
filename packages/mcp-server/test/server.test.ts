@@ -283,3 +283,63 @@ describe('a waiting discovery', () => {
     expect(progress.at(-1)).toBe(1);
   });
 });
+
+describe('a topic published more than once per cycle', () => {
+  it('reports the two groups of intervals, without saying what causes them', async () => {
+    const instance = await harness();
+    await instance.engine.start();
+    const encoder = new TextEncoder();
+
+    // The signature found on a real production line: a short gap inside the cycle, a long
+    // one between cycles, repeated. Twenty pairs is past the threshold where a second group
+    // stops being indistinguishable from jitter.
+    for (let cycle = 0; cycle < 20; cycle += 1) {
+      instance.transports.last.deliver({
+        topic: 'plc/state',
+        payload: encoder.encode('{"state":"READY"}'),
+      });
+      await instance.clock.advance(150);
+      instance.transports.last.deliver({
+        topic: 'plc/state',
+        payload: encoder.encode('{"state":"READY"}'),
+      });
+      await instance.clock.advance(1350);
+    }
+
+    const result = await call(instance.client, 'mqtt_describe_topic', { topic: 'plc/state' });
+    const text = textOf(result);
+
+    expect(text).toContain('intervals fall into 2 groups');
+    expect(text).toContain('A topic published once per cycle has one group');
+    // The shape is a fact; the cause is not something arrival times can settle.
+    expect(text).not.toMatch(/\bbecause\b|\bcaused\b/);
+    expect(result.structuredContent).toMatchObject({
+      observations: {
+        intervalGroups: [
+          { fromMs: 128, toMs: 256 },
+          { fromMs: 1024, toMs: 2048 },
+        ],
+      },
+    });
+  });
+
+  it('says nothing about groups for a topic with one steady period', async () => {
+    const instance = await harness();
+    await instance.engine.start();
+
+    for (let cycle = 0; cycle < 20; cycle += 1) {
+      instance.transports.last.deliver({
+        topic: 'plc/heartbeat',
+        payload: new TextEncoder().encode(String(cycle)),
+      });
+      await instance.clock.advance(1500);
+    }
+
+    const text = textOf(
+      await call(instance.client, 'mqtt_describe_topic', { topic: 'plc/heartbeat' }),
+    );
+
+    expect(text).toContain('intervals: mean');
+    expect(text).not.toContain('intervals fall into');
+  });
+});

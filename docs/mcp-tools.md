@@ -120,8 +120,13 @@ amount of work on an unbounded number of topic names.
 Everything observed about one topic. **Facts**: message count, first and last seen, last live
 message, delivered QoS counts, retained state, payload kinds, total and maximum payload size,
 the last payload as a safe view. **Observations**: messages per second, mean and standard
-deviation of the interval between messages, and how long it has been silent relative to its own
-mean.
+deviation of the interval between messages, how long it has been silent relative to its own
+mean, and — when the gaps fall into more than one population — the groups they form.
+
+Two groups is what a topic published twice per cycle looks like: a short gap inside the cycle
+and a long one between cycles. The answer reports that shape and not its cause, because
+arrival times cannot settle whether it is two publishers, one loop publishing twice, or a
+retry.
 
 A topic never observed returns `TOPIC_NOT_OBSERVED` with a hint, not an empty answer: an empty
 answer invites the conclusion that the topic does not exist.
