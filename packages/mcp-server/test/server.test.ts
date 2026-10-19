@@ -599,3 +599,75 @@ describe('time belongs to the engine', () => {
     expect(textOf(quiet)).toContain('No observed topic matches');
   });
 });
+
+describe('the neighbours of a topic', () => {
+  /** A slice of a real machine: three stations, the same readings under each. */
+  async function machine(): Promise<Harness> {
+    const instance = await harness();
+    await instance.engine.start();
+    const encoder = new TextEncoder();
+    for (const topic of [
+      'plc/dispense/state',
+      'plc/dispense/infos',
+      'plc/dispense/f1',
+      'plc/dispense/f2',
+      'plc/return/state',
+      'plc/washer/state',
+      'hmi/alarm',
+    ]) {
+      instance.transports.last.deliver({ topic, payload: encoder.encode('RUNNING') });
+    }
+    await instance.clock.advance(200);
+    return instance;
+  }
+
+  it('finds the rest of the machine, the same reading elsewhere, and the numbered family', async () => {
+    const { client } = await machine();
+
+    const text = textOf(await call(client, 'mqtt_describe_topic', { topic: 'plc/dispense/f1' }));
+
+    expect(text).toContain('plc/dispense/infos — Published under the same branch');
+    expect(text).toContain('plc/dispense/f2 — Same name but for a number, plc/dispense/f#');
+  });
+
+  it('relates the same reading taken on other machines', async () => {
+    const { client } = await machine();
+
+    const text = textOf(await call(client, 'mqtt_describe_topic', { topic: 'plc/dispense/state' }));
+
+    expect(text).toContain('plc/return/state — Ends with the same level, state');
+    expect(text).toContain('plc/washer/state — Ends with the same level, state');
+    // An unrelated branch is not dragged in.
+    expect(text).not.toContain('hmi/alarm');
+  });
+
+  it('gives a reason for every relation, and says the reasons are about names', async () => {
+    const { client } = await machine();
+
+    const result = await call(client, 'mqtt_describe_topic', { topic: 'plc/dispense/state' });
+    const text = textOf(result);
+
+    expect(text).toContain('none of this is evidence they are connected');
+    const related = (
+      result.structuredContent as { observations?: { related?: { explanation: string }[] } }
+    ).observations?.related;
+    expect(related?.length).toBeGreaterThan(0);
+    for (const item of related ?? []) {
+      expect(item.explanation).not.toBe('');
+    }
+  });
+
+  it('says nothing about relations for a topic that has none', async () => {
+    const instance = await harness();
+    await instance.engine.start();
+    instance.transports.last.deliver({
+      topic: 'alone',
+      payload: new TextEncoder().encode('1'),
+    });
+    await instance.clock.advance(200);
+
+    const text = textOf(await call(instance.client, 'mqtt_describe_topic', { topic: 'alone' }));
+
+    expect(text).not.toContain('related topics');
+  });
+});

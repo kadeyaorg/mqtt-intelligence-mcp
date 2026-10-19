@@ -19,6 +19,7 @@ import type { QoS } from '../domain/mqtt.js';
 import type { TopicName } from '../domain/topic.js';
 import type { IntervalGroup, PayloadKindCounts, RetainedState } from '../catalog/index.js';
 import type { MessageProperties } from '../domain/mqtt.js';
+import type { RelatedTopic } from './related.js';
 import type {
   PayloadView,
   PayloadViewOptions,
@@ -116,6 +117,14 @@ export interface TopicObservations {
    * from some payloads, which is not the same as being optional by design.
    */
   readonly schema?: SchemaObservation;
+  /**
+   * Other topics related to this one by name, each with the reason in words.
+   *
+   * Relations are facts about the names and nothing else. Two topics ending in the same
+   * level are related by convention, not by wiring, and the explanation is what lets a
+   * reader judge that rather than assume it.
+   */
+  readonly related?: readonly RelatedTopic[];
   readonly silence?: {
     readonly forMs: number;
     /** How many typical intervals of silence this is. */

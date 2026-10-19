@@ -144,3 +144,10 @@ export const schemaChangeSchema = z.object({
   at: z.number().describe('Receipt time, in epoch milliseconds.'),
   types: z.array(z.string()),
 });
+
+export const relatedTopicSchema = z.object({
+  topic: z.string(),
+  reason: z.enum(['sibling', 'same-leaf', 'same-shape']),
+  explanation: z.string(),
+  messageCount: z.number(),
+});

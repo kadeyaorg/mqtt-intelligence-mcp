@@ -22,6 +22,7 @@ import {
   formatInstant,
   formatPayload,
   renderAnswer,
+  renderRelatedTopics,
   renderSchemaChanges,
   renderSchemaFields,
   UNTRUSTED_PAYLOAD_NOTE,
@@ -32,6 +33,7 @@ import {
   brokerIdSchema,
   coverageSchema,
   messageFactSchema,
+  relatedTopicSchema,
   schemaChangeSchema,
   schemaFieldSchema,
   topicFilterSchema,
@@ -458,6 +460,12 @@ function registerDescribeTopic(server: McpServer, engine: Engine, guard: Guard):
             .describe(
               'Shape of the JSON payloads inspected so far. A summary of what was seen, not a contract: a field below full presence was absent from some payloads, which is not the same as being optional by design. Use mqtt_infer_schema for the exportable JSON Schema.',
             ),
+          related: z
+            .array(relatedTopicSchema)
+            .optional()
+            .describe(
+              'Other topics related to this one by name. Relations are facts about the names and nothing else: two topics ending in the same level are related by convention, not by wiring, and each carries the reason so the claim can be judged rather than assumed.',
+            ),
           silence: z.object({ forMs: z.number(), ratioToMeanInterval: z.number() }).optional(),
         }),
       ),
@@ -508,6 +516,9 @@ function registerDescribeTopic(server: McpServer, engine: Engine, guard: Guard):
                 ...renderSchemaFields(observations.schema.fields),
                 ...renderSchemaChanges(observations.schema.changes),
               ].join('\n'),
+          observations?.related === undefined
+            ? ''
+            : renderRelatedTopics(observations.related).join('\n'),
           observations?.silence === undefined
             ? ''
             : `  silent for ${formatDuration(observations.silence.forMs)}, which is ${observations.silence.ratioToMeanInterval.toFixed(1)}× its usual interval`,

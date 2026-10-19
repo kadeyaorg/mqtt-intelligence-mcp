@@ -144,3 +144,29 @@ export function renderSchemaChanges(
     ),
   ];
 }
+
+/**
+ * Related topics, each with the reason it is related.
+ *
+ * The reason is the point. "Related" with no reason invites the assumption that the topics
+ * are wired together; "ends with the same level, state" is a fact about naming that a reader
+ * can weigh for themselves.
+ */
+export function renderRelatedTopics(
+  related: readonly {
+    readonly topic: string;
+    readonly explanation: string;
+    readonly messageCount: number;
+  }[],
+): readonly string[] {
+  if (related.length === 0) {
+    return [];
+  }
+  return [
+    '  related topics, by name only — none of this is evidence they are connected:',
+    ...related.map(
+      (item) =>
+        `    ${item.topic} — ${item.explanation} (${formatCount(item.messageCount)} message(s))`,
+    ),
+  ];
+}
