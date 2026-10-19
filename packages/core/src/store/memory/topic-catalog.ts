@@ -251,6 +251,9 @@ export class MemoryTopicCatalog implements TopicCatalog {
     if (query.silentSince !== undefined && (record.lastLiveAt ?? 0) >= query.silentSince) {
       return false;
     }
+    if (query.firstSeenSince !== undefined && record.firstSeenAt < query.firstSeenSince) {
+      return false;
+    }
     return true;
   }
 }

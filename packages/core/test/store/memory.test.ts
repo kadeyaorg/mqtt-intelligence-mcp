@@ -290,3 +290,29 @@ describe('folding sibling branches that share a shape', () => {
     expect(segments.sort()).toEqual(['f1', 'f2', 'f3']);
   });
 });
+
+describe('asking what is new', () => {
+  it('keeps only the topics first seen at or after the instant', async () => {
+    const catalog = new MemoryTopicCatalog();
+    await catalog.applyBatch(BROKER, [
+      topicDelta('old/one', { firstSeenAt: 1000, lastSeenAt: 9000 }),
+      topicDelta('fresh/one', { firstSeenAt: 8000, lastSeenAt: 9000 }),
+    ]);
+
+    const page = await catalog.query({ brokerId: BROKER, firstSeenSince: 5000 });
+
+    expect(page.items.map((record) => record.topic)).toEqual(['fresh/one']);
+  });
+
+  it('judges on first seen, not on recent traffic', async () => {
+    const catalog = new MemoryTopicCatalog();
+    await catalog.applyBatch(BROKER, [
+      // Long-standing and busy: the opposite of new, however loudly it publishes.
+      topicDelta('old/busy', { firstSeenAt: 1000, lastSeenAt: 9999 }),
+    ]);
+
+    const page = await catalog.query({ brokerId: BROKER, firstSeenSince: 5000 });
+
+    expect(page.items).toHaveLength(0);
+  });
+});

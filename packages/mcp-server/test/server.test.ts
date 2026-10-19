@@ -525,3 +525,77 @@ describe('a namespace keyed by an identifier', () => {
     expect(text).not.toContain('folded');
   });
 });
+
+describe('what is new on this broker', () => {
+  it('finds only the topics first seen recently, and says what "first seen" means', async () => {
+    const instance = await harness();
+    await instance.engine.start();
+    const encoder = new TextEncoder();
+
+    instance.transports.last.deliver({
+      topic: 'factory/line-01/plc/state',
+      payload: encoder.encode('RUNNING'),
+    });
+    await instance.clock.advance(60_000);
+    instance.transports.last.deliver({
+      topic: 'factory/line-01/robot/torque',
+      payload: encoder.encode('118.4'),
+    });
+    await instance.clock.advance(200);
+    // The long-standing topic keeps publishing: busy is not the same as new.
+    instance.transports.last.deliver({
+      topic: 'factory/line-01/plc/state',
+      payload: encoder.encode('RUNNING'),
+    });
+    await instance.clock.advance(200);
+
+    const result = await call(instance.client, 'mqtt_search_topics', { firstSeenSinceMs: 30_000 });
+    const text = textOf(result);
+
+    expect(text).toContain('factory/line-01/robot/torque');
+    expect(text).not.toContain('factory/line-01/plc/state');
+
+    const listed = await instance.client.listTools();
+    const search = listed.tools.find((tool) => tool.name === 'mqtt_search_topics');
+    // A reader who takes "new" for "recently created" would be wrong in a way that matters.
+    expect(JSON.stringify(search?.inputSchema)).toContain('not first published');
+  });
+
+  it('still has no separate activity tool: the three questions are one call', async () => {
+    const { client } = await harness();
+
+    const listed = await client.listTools();
+
+    expect(listed.tools.map((tool) => tool.name)).not.toContain('mqtt_get_activity');
+    const search = JSON.stringify(
+      listed.tools.find((tool) => tool.name === 'mqtt_search_topics')?.inputSchema,
+    );
+    expect(search).toContain('firstSeenSinceMs');
+    expect(search).toContain('silentForMs');
+    expect(search).toContain('rate');
+  });
+});
+
+describe('time belongs to the engine', () => {
+  it('answers every duration filter against the engine clock, not a wall clock', async () => {
+    // The harness runs on a fake clock months away from the real one. An adapter that turned
+    // "the last minute" into an instant of its own would ask the engine about a moment it has
+    // never been at, and every one of these would come back empty.
+    const instance = await harness();
+    await instance.engine.start();
+    instance.transports.last.deliver({
+      topic: 'factory/line-01/robot/status',
+      payload: new TextEncoder().encode('{"state":"READY"}'),
+    });
+    await instance.clock.advance(1000);
+
+    const active = await call(instance.client, 'mqtt_search_topics', { activeSinceMs: 60_000 });
+    const fresh = await call(instance.client, 'mqtt_search_topics', { firstSeenSinceMs: 60_000 });
+    const quiet = await call(instance.client, 'mqtt_search_topics', { silentForMs: 60_000 });
+
+    expect(textOf(active)).toContain('factory/line-01/robot/status');
+    expect(textOf(fresh)).toContain('factory/line-01/robot/status');
+    // Published a second ago, so it is anything but quiet.
+    expect(textOf(quiet)).toContain('No observed topic matches');
+  });
+});
