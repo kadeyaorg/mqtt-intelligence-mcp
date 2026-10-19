@@ -98,10 +98,8 @@ describe('a retained topic that keeps publishing', () => {
   });
 
   it('finds it when asked what is active, and not when asked what has gone quiet', async () => {
-    const since = Date.now() - 60_000;
-
-    const active = await engine.searchTopics({ brokerId: BROKER, activeSince: since });
-    const silent = await engine.searchTopics({ brokerId: BROKER, silentSince: since });
+    const active = await engine.searchTopics({ brokerId: BROKER, activeWithinMs: 60_000 });
+    const silent = await engine.searchTopics({ brokerId: BROKER, silentForMs: 60_000 });
 
     expect(active.facts.topics.map((topic) => topic.topic)).toContain(TOPIC);
     expect(silent.facts.topics.map((topic) => topic.topic)).not.toContain(TOPIC);

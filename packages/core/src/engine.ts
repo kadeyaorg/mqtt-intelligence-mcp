@@ -106,8 +106,17 @@ export interface SearchTopicsRequest {
   readonly brokerId?: BrokerId;
   readonly filter?: TopicFilter;
   readonly text?: string;
-  readonly activeSince?: number;
-  readonly silentSince?: number;
+  /**
+   * Durations rather than instants, because the engine owns the clock.
+   *
+   * An adapter that turned "the last minute" into an instant would have to read a clock of
+   * its own, and any engine not running on the system clock — a test, a replay — would then
+   * be asked about a moment it has never been at.
+   */
+  readonly activeWithinMs?: number;
+  readonly silentForMs?: number;
+  /** Only topics this server first saw within the last N milliseconds. */
+  readonly firstSeenWithinMs?: number;
   readonly sortBy?: TopicQuery['sortBy'];
   readonly descending?: boolean;
   readonly limit?: number;
@@ -392,20 +401,26 @@ class EngineImplementation implements Engine {
 
   async searchTopics(request: SearchTopicsRequest = {}): Promise<Answer<SearchTopicsFacts>> {
     const runtime = this.#resolve(request.brokerId);
+    const now = this.#clock.now();
     const { page, summaries } = await runSearch(
       this.#catalog,
       {
         brokerId: runtime.config.id,
         ...(request.filter === undefined ? {} : { filter: request.filter }),
         ...(request.text === undefined ? {} : { text: request.text }),
-        ...(request.activeSince === undefined ? {} : { activeSince: request.activeSince }),
-        ...(request.silentSince === undefined ? {} : { silentSince: request.silentSince }),
+        ...(request.activeWithinMs === undefined
+          ? {}
+          : { activeSince: now - request.activeWithinMs }),
+        ...(request.silentForMs === undefined ? {} : { silentSince: now - request.silentForMs }),
+        ...(request.firstSeenWithinMs === undefined
+          ? {}
+          : { firstSeenSince: now - request.firstSeenWithinMs }),
         ...(request.sortBy === undefined ? {} : { sortBy: request.sortBy }),
         ...(request.descending === undefined ? {} : { descending: request.descending }),
         ...(request.limit === undefined ? {} : { limit: request.limit }),
         ...(request.cursor === undefined ? {} : { cursor: request.cursor }),
       },
-      this.#clock.now(),
+      now,
     );
     const coverage = await runtime.discovery.coverage();
     const limitations = coverageLimitations(coverage);
