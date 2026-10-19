@@ -26,8 +26,8 @@ import { DiscoveryService } from './discovery/index.js';
 import { IngestPipeline } from './ingest/index.js';
 import type { Logger, MetricsRecorder } from './observability/index.js';
 import { createLogger, noopMetrics } from './observability/index.js';
-import type { JsonValue, PayloadViewOptions, SchemaField } from './payload/index.js';
-import { EMPTY_SCHEMA, flattenSchema, toJsonSchema } from './payload/index.js';
+import type { JsonValue, PayloadViewOptions, SchemaChange, SchemaField } from './payload/index.js';
+import { EMPTY_SCHEMA, flattenSchema, schemaChanges, toJsonSchema } from './payload/index.js';
 import { createReadPolicy } from './policy/index.js';
 import type {
   Answer,
@@ -98,6 +98,8 @@ export interface TopicTreeRequest {
   readonly root?: readonly string[];
   readonly depth?: number;
   readonly maxChildren?: number;
+  /** Fold sibling branches whose names differ only in a number or an identifier. */
+  readonly foldPatterns?: boolean;
 }
 
 export interface SearchTopicsRequest {
@@ -136,6 +138,8 @@ export interface InferSchemaFacts {
   /** JSON Schema draft 2020-12, ready to export.*/
   readonly jsonSchema: JsonValue;
   readonly fields: readonly SchemaField[];
+  /** Positions whose observation window does not match the topic's. */
+  readonly changes: readonly SchemaChange[];
   readonly truncated: boolean;
 }
 
@@ -379,6 +383,7 @@ class EngineImplementation implements Engine {
       ...(request.root === undefined ? {} : { root: request.root }),
       ...(request.depth === undefined ? {} : { depth: request.depth }),
       ...(request.maxChildren === undefined ? {} : { maxChildren: request.maxChildren }),
+      ...(request.foldPatterns === undefined ? {} : { foldPatterns: request.foldPatterns }),
     });
     const coverage = await runtime.discovery.coverage();
 
@@ -482,6 +487,7 @@ class EngineImplementation implements Engine {
         messageCount: record.messageCount,
         jsonSchema: toJsonSchema(schema),
         fields: flattenSchema(schema),
+        changes: schemaChanges(schema),
         truncated: schema.truncated === true,
       },
       coverage,

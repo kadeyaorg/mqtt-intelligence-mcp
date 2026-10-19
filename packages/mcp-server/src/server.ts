@@ -22,6 +22,7 @@ import {
   formatInstant,
   formatPayload,
   renderAnswer,
+  renderSchemaChanges,
   renderSchemaFields,
   UNTRUSTED_PAYLOAD_NOTE,
 } from './render/answer.js';
@@ -31,6 +32,7 @@ import {
   brokerIdSchema,
   coverageSchema,
   messageFactSchema,
+  schemaChangeSchema,
   schemaFieldSchema,
   topicFilterSchema,
   topicNameSchema,
@@ -61,13 +63,18 @@ interface TreeLike {
   readonly isTopic: boolean;
   readonly children: readonly TreeLike[];
   readonly truncatedChildren: number;
+  readonly foldedBranches?: number;
 }
 
 function renderTree(node: TreeLike, indent: string): string {
   const label = node.segment === '' ? (node.path === '' ? '(root)' : node.path) : node.segment;
   const marker = node.isTopic ? ' [topic]' : '';
+  const folded =
+    node.foldedBranches === undefined
+      ? ''
+      : ` [${formatCount(node.foldedBranches)} branches folded into this shape]`;
   const lines = [
-    `${indent}${label}${marker} — ${formatCount(node.topicCount)} topic(s), ${formatCount(node.messageCount)} message(s)`,
+    `${indent}${label}${marker}${folded} — ${formatCount(node.topicCount)} topic(s), ${formatCount(node.messageCount)} message(s)`,
   ];
   for (const child of node.children) {
     lines.push(renderTree(child, `${indent}  `));
@@ -272,6 +279,12 @@ function registerTopicTree(server: McpServer, engine: Engine, guard: Guard): voi
           .describe('Levels to start from, for example ["factory", "line-01"].'),
         depth: z.number().int().min(1).max(8).optional().describe('Levels to expand. Default 3.'),
         maxChildren: z.number().int().min(1).max(200).optional(),
+        foldPatterns: z
+          .boolean()
+          .optional()
+          .describe(
+            'Fold sibling branches whose names differ only in a number or an identifier, so a namespace keyed by device id stays readable. Default true; turn it off to see every branch as published.',
+          ),
       }),
       outputSchema: answerSchema(topicTreeNodeSchema),
       annotations: { ...READ_ONLY, idempotentHint: true },
@@ -283,6 +296,7 @@ function registerTopicTree(server: McpServer, engine: Engine, guard: Guard): voi
           ...(args.root === undefined ? {} : { root: args.root }),
           ...(args.depth === undefined ? {} : { depth: args.depth }),
           ...(args.maxChildren === undefined ? {} : { maxChildren: args.maxChildren }),
+          ...(args.foldPatterns === undefined ? {} : { foldPatterns: args.foldPatterns }),
         });
 
         return {
@@ -425,6 +439,7 @@ function registerDescribeTopic(server: McpServer, engine: Engine, guard: Guard):
             .object({
               payloadsInspected: z.number(),
               fields: z.array(schemaFieldSchema),
+              changes: z.array(schemaChangeSchema),
               truncated: z.boolean(),
             })
             .optional()
@@ -479,6 +494,7 @@ function registerDescribeTopic(server: McpServer, engine: Engine, guard: Guard):
             : [
                 `  shape, from ${formatCount(observations.schema.payloadsInspected)} inspected payload(s):`,
                 ...renderSchemaFields(observations.schema.fields),
+                ...renderSchemaChanges(observations.schema.changes),
               ].join('\n'),
           observations?.silence === undefined
             ? ''
@@ -568,6 +584,7 @@ function registerInferSchema(server: McpServer, engine: Engine, guard: Guard): v
           messageCount: z.number(),
           jsonSchema: z.json().describe('JSON Schema draft 2020-12.'),
           fields: z.array(schemaFieldSchema),
+          changes: z.array(schemaChangeSchema),
           truncated: z.boolean(),
         }),
       ),
@@ -589,6 +606,7 @@ function registerInferSchema(server: McpServer, engine: Engine, guard: Guard): v
                 `  inferred from ${formatCount(facts.payloadsInspected)} inspected payload(s) of ${formatCount(facts.messageCount)} message(s)`,
                 'FIELDS',
                 ...renderSchemaFields(facts.fields),
+                ...renderSchemaChanges(facts.changes),
                 'JSON SCHEMA',
                 JSON.stringify(facts.jsonSchema, null, 2)
                   .split('\n')

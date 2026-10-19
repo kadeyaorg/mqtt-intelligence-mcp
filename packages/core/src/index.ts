@@ -76,6 +76,7 @@ export {
   mergeSchemas,
   observedTypes,
   observeJson,
+  schemaChanges,
   toJsonSchema,
   toPayloadView,
 } from './payload/index.js';
@@ -92,6 +93,7 @@ export type {
   PayloadKind,
   PayloadView,
   PayloadViewOptions,
+  SchemaChange,
   SchemaField,
   SchemaLimits,
   SchemaNode,

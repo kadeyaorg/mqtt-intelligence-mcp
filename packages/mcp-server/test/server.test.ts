@@ -431,3 +431,97 @@ describe('the shape of a topic', () => {
     expect(text).toContain('the topic may still publish JSON');
   });
 });
+
+describe('a payload shape that changes mid-flight', () => {
+  it('shows the old field ending and the new one starting, with their times', async () => {
+    const instance = await harness();
+    await instance.engine.start();
+    const encoder = new TextEncoder();
+    const topic = 'factory/line-01/plc/state';
+
+    // A firmware upgrade, as it looks from the outside: a key shortened, a field added.
+    const deliver = async (payload: string): Promise<void> => {
+      instance.transports.last.deliver({ topic, payload: encoder.encode(payload) });
+      await instance.clock.advance(1000);
+    };
+    for (let index = 0; index < 15; index += 1) {
+      await deliver('{"state":"READY","IsVisualInspectionActivated":false}');
+    }
+    for (let index = 0; index < 15; index += 1) {
+      await deliver('{"state":"READY","IsVInspActive":false,"IsStopMiReq":false}');
+    }
+
+    const result = await call(instance.client, 'mqtt_infer_schema', { topic });
+    const text = textOf(result);
+
+    expect(text).toContain('the shape changed while we were watching');
+    expect(text).toContain('IsVisualInspectionActivated disappeared at');
+    expect(text).toContain('IsVInspActive appeared at');
+    expect(text).toContain('IsStopMiReq appeared at');
+    // The field that never changed is not in the list.
+    expect(text).not.toContain('state appeared');
+    // It reports the change, never a reason for it: a rename and two unrelated edits look
+    // identical from arrival times.
+    expect(text).not.toMatch(/\brenamed\b|\bbecause\b/);
+  });
+
+  it('says nothing about changes for a shape that held still', async () => {
+    const instance = await harness();
+    await instance.engine.start();
+    for (let index = 0; index < 20; index += 1) {
+      instance.transports.last.deliver({
+        topic: 'factory/line-01/robot/status',
+        payload: new TextEncoder().encode(`{"state":"READY","cycleCount":${String(index)}}`),
+      });
+      await instance.clock.advance(1000);
+    }
+
+    const text = textOf(
+      await call(instance.client, 'mqtt_infer_schema', { topic: 'factory/line-01/robot/status' }),
+    );
+
+    expect(text).toContain('cycleCount: number — always');
+    expect(text).not.toContain('the shape changed');
+  });
+});
+
+describe('a namespace keyed by an identifier', () => {
+  it('folds the branches and says it did, rather than listing them or hiding them', async () => {
+    const instance = await harness();
+    await instance.engine.start();
+    for (let index = 1; index <= 6; index += 1) {
+      instance.transports.last.deliver({
+        topic: `factory/line-01/station/f${String(index)}/state`,
+        payload: new TextEncoder().encode('RUNNING'),
+      });
+    }
+    await instance.clock.advance(200);
+
+    const text = textOf(await call(instance.client, 'mqtt_topic_tree', { depth: 6 }));
+
+    expect(text).toContain('f#');
+    expect(text).toContain('6 branches folded into this shape');
+    // The fold aggregates: the subtree below the folded branches is still there.
+    expect(text).toContain('state');
+  });
+
+  it('lists every branch when the caller turns folding off', async () => {
+    const instance = await harness();
+    await instance.engine.start();
+    for (let index = 1; index <= 6; index += 1) {
+      instance.transports.last.deliver({
+        topic: `factory/line-01/station/f${String(index)}/state`,
+        payload: new TextEncoder().encode('RUNNING'),
+      });
+    }
+    await instance.clock.advance(200);
+
+    const text = textOf(
+      await call(instance.client, 'mqtt_topic_tree', { depth: 6, foldPatterns: false }),
+    );
+
+    expect(text).toContain('f1');
+    expect(text).toContain('f6');
+    expect(text).not.toContain('folded');
+  });
+});

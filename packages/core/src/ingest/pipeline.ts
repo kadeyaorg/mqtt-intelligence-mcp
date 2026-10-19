@@ -288,7 +288,11 @@ export class IngestPipeline {
           if (inspected.json !== undefined) {
             // The shape rides on the payloads that were going to be parsed anyway, so
             // inference costs no extra parse and obeys the same inspection budget.
-            accumulator.schema = observeJson(accumulator.schema, inspected.json);
+            accumulator.schema = observeJson(
+              accumulator.schema,
+              inspected.json,
+              accumulator.pendingAt,
+            );
           }
         } else {
           notInspected += 1;

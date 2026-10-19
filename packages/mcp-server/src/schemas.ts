@@ -127,6 +127,7 @@ export const topicTreeNodeSchema: z.ZodType = z.lazy(() =>
     isTopic: z.boolean(),
     children: z.array(topicTreeNodeSchema),
     truncatedChildren: z.number(),
+    foldedBranches: z.number().optional(),
   }),
 );
 
@@ -135,4 +136,11 @@ export const schemaFieldSchema = z.object({
   types: z.array(z.string()),
   presence: z.number().describe('Share of the parent values that carried it, 0 to 1.'),
   truncated: z.boolean(),
+});
+
+export const schemaChangeSchema = z.object({
+  path: z.string(),
+  kind: z.enum(['appeared', 'disappeared']),
+  at: z.number().describe('Receipt time, in epoch milliseconds.'),
+  types: z.array(z.string()),
 });

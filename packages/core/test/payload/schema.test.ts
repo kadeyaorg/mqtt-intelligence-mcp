@@ -14,13 +14,19 @@ import {
   EMPTY_SCHEMA,
   mergeSchemas,
   observeJson,
+  schemaChanges,
   toJsonSchema,
 } from '../../src/index.js';
 
-function infer(values: readonly JsonValue[], limits = DEFAULT_SCHEMA_LIMITS): SchemaNode {
+/** Folds payloads in, one per second, which is enough for the window to mean something. */
+function infer(
+  values: readonly JsonValue[],
+  limits = DEFAULT_SCHEMA_LIMITS,
+  startAt = 1_000_000,
+): SchemaNode {
   let node: SchemaNode | undefined;
-  for (const value of values) {
-    node = observeJson(node, value, limits);
+  for (const [index, value] of values.entries()) {
+    node = observeJson(node, value, startAt + index * 1000, limits);
   }
   return node ?? EMPTY_SCHEMA;
 }
@@ -129,12 +135,15 @@ describe('merging', () => {
           const left = payloads.slice(0, split);
           const right = payloads.slice(split);
 
+          // The second half keeps the timestamps it would have had, because the window is
+          // part of what has to survive the split.
+          const rightStart = 1_000_000 + left.length * 1000;
           const merged =
             left.length === 0
-              ? infer(right)
+              ? infer(right, DEFAULT_SCHEMA_LIMITS, rightStart)
               : right.length === 0
                 ? infer(left)
-                : mergeSchemas(infer(left), infer(right));
+                : mergeSchemas(infer(left), infer(right, DEFAULT_SCHEMA_LIMITS, rightStart));
 
           expect(merged).toEqual(whole);
         },
@@ -187,5 +196,73 @@ describe('exporting JSON Schema', () => {
 
     expect(schema['additionalProperties']).toMatchObject({ type: 'number' });
     expect(String(schema['description'])).toContain('Keys vary');
+  });
+});
+
+describe('noticing that a shape changed', () => {
+  it('reports nothing when every field was there from the start', () => {
+    const steady = Array.from({ length: 30 }, (_, index) => ({ state: 'READY', count: index }));
+
+    expect(schemaChanges(infer(steady))).toEqual([]);
+  });
+
+  it('reports nothing over a window too short to compare against', () => {
+    // Three payloads a millisecond apart: everything in it is equally new.
+    let node: SchemaNode | undefined;
+    for (const [index, value] of [{ a: 1 }, { a: 2, b: 3 }, { a: 4, b: 5 }].entries()) {
+      node = observeJson(node, value, 1_000_000 + index);
+    }
+
+    expect(schemaChanges(node ?? EMPTY_SCHEMA)).toEqual([]);
+  });
+
+  it('shows a renamed field as one ending and another starting at the same moment', () => {
+    // The real case: between two firmware versions a key was shortened and a field added.
+    const before = Array.from({ length: 20 }, () => ({
+      state: 'READY',
+      IsVisualInspectionActivated: false,
+    }));
+    const after = Array.from({ length: 20 }, () => ({
+      state: 'READY',
+      IsVInspActive: false,
+      IsStopMiReq: false,
+    }));
+    const node = infer([...before, ...after]);
+
+    const changes = schemaChanges(node);
+    const byPath = new Map(changes.map((change) => [`${change.path}:${change.kind}`, change]));
+
+    expect(byPath.get('IsVisualInspectionActivated:disappeared')).toBeDefined();
+    expect(byPath.get('IsVInspActive:appeared')).toBeDefined();
+    expect(byPath.get('IsStopMiReq:appeared')).toBeDefined();
+    // The field that never changed is not reported.
+    expect(changes.some((change) => change.path === 'state')).toBe(false);
+
+    // The two sides of the rename are one payload apart, which is what makes it readable as
+    // a rename by someone who knows the firmware. The server does not say so itself.
+    const ended = byPath.get('IsVisualInspectionActivated:disappeared')?.at ?? 0;
+    const started = byPath.get('IsVInspActive:appeared')?.at ?? 0;
+    expect(started - ended).toBe(1000);
+  });
+
+  it('notices a field nested inside an object', () => {
+    const before = Array.from({ length: 20 }, () => ({ robot: { speed: 1 } }));
+    const after = Array.from({ length: 20 }, () => ({ robot: { speed: 1, torqueNm: 118 } }));
+
+    const changes = schemaChanges(infer([...before, ...after]));
+
+    expect(changes.map((change) => change.path)).toContain('robot.torqueNm');
+  });
+
+  it('survives being merged from two halves, which is how ingestion produces it', () => {
+    const before = Array.from({ length: 20 }, () => ({ old: 1 }));
+    const after = Array.from({ length: 20 }, () => ({ fresh: 2 }));
+
+    const whole = schemaChanges(infer([...before, ...after]));
+    const merged = schemaChanges(
+      mergeSchemas(infer(before), infer(after, DEFAULT_SCHEMA_LIMITS, 1_000_000 + 20 * 1000)),
+    );
+
+    expect(merged).toEqual(whole);
   });
 });
