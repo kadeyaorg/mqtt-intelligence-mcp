@@ -33,9 +33,11 @@ export {
   mergeSchemas,
   observedTypes,
   observeJson,
+  schemaChanges,
   toJsonSchema,
 } from './schema.js';
 export type {
+  SchemaChange,
   SchemaField,
   SchemaLimits,
   SchemaNode,

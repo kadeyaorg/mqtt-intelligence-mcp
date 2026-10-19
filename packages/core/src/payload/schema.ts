@@ -44,6 +44,15 @@ export interface SchemaNode {
   /** Values observed at this position, of any type. */
   readonly seen: number;
   readonly types: SchemaTypeCounts;
+  /**
+   * Receipt time of the first and last payload that carried this position.
+   *
+   * These are what make a change visible. A field whose window ends well before the topic's
+   * stopped appearing; one whose window starts well after it began appearing. Both merge by
+   * min and max, so they survive batching like every other statistic.
+   */
+  readonly firstSeenAt?: number;
+  readonly lastSeenAt?: number;
   /** Shape of each named field, when objects here have few enough distinct keys. */
   readonly fields?: Readonly<Record<string, SchemaNode>>;
   /** Shape of the values, when the keys vary too much to be fields. */
@@ -73,6 +82,18 @@ export const DEFAULT_SCHEMA_LIMITS: SchemaLimits = {
 
 /** A position nothing has been observed at yet. */
 export const EMPTY_SCHEMA: SchemaNode = { seen: 0, types: NO_TYPES };
+
+function mergeWindow(
+  left: SchemaNode,
+  right: SchemaNode,
+): { firstSeenAt?: number; lastSeenAt?: number } {
+  const first = [left.firstSeenAt, right.firstSeenAt].filter((at) => at !== undefined);
+  const last = [left.lastSeenAt, right.lastSeenAt].filter((at) => at !== undefined);
+  return {
+    ...(first.length === 0 ? {} : { firstSeenAt: Math.min(...first) }),
+    ...(last.length === 0 ? {} : { lastSeenAt: Math.max(...last) }),
+  };
+}
 
 function addTypes(left: SchemaTypeCounts, right: SchemaTypeCounts): SchemaTypeCounts {
   return {
@@ -127,6 +148,8 @@ function asMap(node: SchemaNode): SchemaNode {
   return {
     seen: node.seen,
     types: node.types,
+    ...(node.firstSeenAt === undefined ? {} : { firstSeenAt: node.firstSeenAt }),
+    ...(node.lastSeenAt === undefined ? {} : { lastSeenAt: node.lastSeenAt }),
     ...(values === undefined ? {} : { mapValues: values }),
     mapKeys: keys,
     ...(node.items === undefined ? {} : { items: node.items }),
@@ -158,6 +181,7 @@ export function mergeSchemas(
     return {
       seen: a.seen + b.seen,
       types: addTypes(a.types, b.types),
+      ...mergeWindow(a, b),
       ...(values === undefined ? {} : { mapValues: values }),
       mapKeys: (a.mapKeys ?? 0) + (b.mapKeys ?? 0),
       ...mergedItems(a, b, limits),
@@ -181,6 +205,7 @@ export function mergeSchemas(
   return {
     seen: left.seen + right.seen,
     types: addTypes(left.types, right.types),
+    ...mergeWindow(left, right),
     ...(names.size === 0 ? {} : { fields }),
     ...mergedItems(left, right, limits),
     ...(left.truncated === true || right.truncated === true ? { truncated: true } : {}),
@@ -212,6 +237,7 @@ function mergedItems(
 export function observeJson(
   node: SchemaNode | undefined,
   value: JsonValue,
+  at: number,
   limits: SchemaLimits = DEFAULT_SCHEMA_LIMITS,
   depth = 0,
 ): SchemaNode {
@@ -220,6 +246,8 @@ export function observeJson(
   const base: SchemaNode = {
     seen: current.seen + 1,
     types: addTypes(current.types, { ...NO_TYPES, [type]: 1 }),
+    firstSeenAt: Math.min(current.firstSeenAt ?? at, at),
+    lastSeenAt: Math.max(current.lastSeenAt ?? at, at),
     ...(current.fields === undefined ? {} : { fields: current.fields }),
     ...(current.mapValues === undefined ? {} : { mapValues: current.mapValues }),
     ...(current.mapKeys === undefined ? {} : { mapKeys: current.mapKeys }),
@@ -234,7 +262,7 @@ export function observeJson(
   if (type === 'array') {
     let items = current.items;
     for (const element of value as JsonValue[]) {
-      items = observeJson(items, element, limits, depth + 1);
+      items = observeJson(items, element, at, limits, depth + 1);
     }
     return { ...base, ...(items === undefined ? {} : { items }) };
   }
@@ -251,7 +279,7 @@ export function observeJson(
     const folded = asMap(base);
     let values = folded.mapValues;
     for (const [, child] of entries) {
-      values = observeJson(values, child, limits, depth + 1);
+      values = observeJson(values, child, at, limits, depth + 1);
     }
     return {
       ...folded,
@@ -273,7 +301,7 @@ export function observeJson(
     if (existing === undefined) {
       added += 1;
     }
-    fields[key] = observeJson(existing, child, limits, depth + 1);
+    fields[key] = observeJson(existing, child, at, limits, depth + 1);
   }
 
   return {
@@ -395,4 +423,74 @@ export function flattenSchema(node: SchemaNode, maxFields = 64): readonly Schema
 
   walk(node, '', node.seen);
   return fields;
+}
+
+/** A position whose observation window differs from the topic's own. */
+export interface SchemaChange {
+  readonly path: string;
+  /** `appeared` started being published later; `disappeared` stopped. */
+  readonly kind: 'appeared' | 'disappeared';
+  /** Receipt time of the first payload that carried it, or of the last. */
+  readonly at: number;
+  readonly types: readonly SchemaTypeName[];
+}
+
+/**
+ * How long a field's window may differ from the topic's before it counts as a change.
+ *
+ * One per cent of the window absorbs the ordinary case — the field was in every payload but
+ * the very first arrived a few milliseconds apart — while a floor of one second keeps a short
+ * observation from reporting everything as new.
+ */
+const CHANGE_TOLERANCE_SHARE = 0.01;
+const CHANGE_TOLERANCE_FLOOR_MS = 1000;
+
+/**
+ * Fields whose observation window does not match the topic's.
+ *
+ * This is how a renamed field becomes visible: the old name stops appearing at a moment, the
+ * new one starts appearing at the same moment, and both are reported with their timestamps.
+ * It does **not** say the field was renamed — two unrelated changes look identical from here,
+ * and only someone who knows the firmware can tell which it was (ADR-0011). What it gives is
+ * the when, which is what makes the question answerable at all.
+ *
+ * It needs a window to compare against, so a schema observed over a few seconds reports
+ * nothing: everything in it is equally new.
+ */
+export function schemaChanges(node: SchemaNode): readonly SchemaChange[] {
+  const from = node.firstSeenAt;
+  const to = node.lastSeenAt;
+  if (from === undefined || to === undefined) {
+    return [];
+  }
+  const window = to - from;
+  const tolerance = Math.max(CHANGE_TOLERANCE_FLOOR_MS, window * CHANGE_TOLERANCE_SHARE);
+  if (window <= tolerance) {
+    return [];
+  }
+
+  const changes: SchemaChange[] = [];
+  const walk = (current: SchemaNode, path: string): void => {
+    if (path !== '') {
+      const types = observedTypes(current);
+      if (current.firstSeenAt !== undefined && current.firstSeenAt > from + tolerance) {
+        changes.push({ path, kind: 'appeared', at: current.firstSeenAt, types });
+      }
+      if (current.lastSeenAt !== undefined && current.lastSeenAt < to - tolerance) {
+        changes.push({ path, kind: 'disappeared', at: current.lastSeenAt, types });
+      }
+    }
+    for (const [name, child] of Object.entries(current.fields ?? {})) {
+      walk(child, path === '' ? name : `${path}.${name}`);
+    }
+    if (current.mapValues !== undefined) {
+      walk(current.mapValues, `${path}{}`);
+    }
+    if (current.items !== undefined) {
+      walk(current.items, `${path}[]`);
+    }
+  };
+
+  walk(node, '');
+  return changes.sort((left, right) => left.at - right.at || left.path.localeCompare(right.path));
 }

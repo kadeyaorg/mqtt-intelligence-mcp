@@ -136,3 +136,10 @@ export const schemaFieldSchema = z.object({
   presence: z.number().describe('Share of the parent values that carried it, 0 to 1.'),
   truncated: z.boolean(),
 });
+
+export const schemaChangeSchema = z.object({
+  path: z.string(),
+  kind: z.enum(['appeared', 'disappeared']),
+  at: z.number().describe('Receipt time, in epoch milliseconds.'),
+  types: z.array(z.string()),
+});

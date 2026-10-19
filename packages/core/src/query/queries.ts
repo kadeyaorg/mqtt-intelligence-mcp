@@ -19,8 +19,13 @@ import type { QoS } from '../domain/mqtt.js';
 import type { TopicName } from '../domain/topic.js';
 import type { IntervalGroup, PayloadKindCounts, RetainedState } from '../catalog/index.js';
 import type { MessageProperties } from '../domain/mqtt.js';
-import type { PayloadView, PayloadViewOptions, SchemaField } from '../payload/index.js';
-import { flattenSchema, toPayloadView } from '../payload/index.js';
+import type {
+  PayloadView,
+  PayloadViewOptions,
+  SchemaChange,
+  SchemaField,
+} from '../payload/index.js';
+import { flattenSchema, schemaChanges, toPayloadView } from '../payload/index.js';
 import type { MessageStore, ObservedMessage } from '../store/index.js';
 
 export interface TopicSummary {
@@ -79,6 +84,14 @@ export interface SchemaObservation {
   /** Payloads folded into this shape. Ingestion samples, so this is not the message count. */
   readonly payloadsInspected: number;
   readonly fields: readonly SchemaField[];
+  /**
+   * Positions whose observation window does not match the topic's.
+   *
+   * A field that stopped appearing and another that started at the same moment is what a
+   * rename looks like from here. It is not called one: two unrelated changes look identical,
+   * and only someone who knows the firmware can tell which it was.
+   */
+  readonly changes: readonly SchemaChange[];
   /** True when a limit stopped inference somewhere inside.*/
   readonly truncated: boolean;
 }
@@ -199,6 +212,7 @@ export function toTopicObservations(record: TopicRecord, now: number): TopicObse
           schema: {
             payloadsInspected: record.schema.seen,
             fields: flattenSchema(record.schema),
+            changes: schemaChanges(record.schema),
             truncated: record.schema.truncated === true,
           },
         }),
