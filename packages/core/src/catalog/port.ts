@@ -40,6 +40,13 @@ export interface TopicQuery {
 }
 
 export interface TreeQuery {
+  /**
+   * Fold sibling branches whose names differ only in a number or an identifier. Default true.
+   *
+   * A namespace keyed by device id is unreadable one branch at a time, and the shape is what
+   * the reader actually wants. Turn it off to see every branch as published.
+   */
+  readonly foldPatterns?: boolean;
   readonly brokerId?: BrokerId;
   /** Levels to start from, for example `["factory", "line-01"]`. */
   readonly root?: readonly string[];
@@ -62,6 +69,13 @@ export interface TopicTreeNode {
   readonly children: readonly TopicTreeNode[];
   /** Children not listed because of `maxChildren`. */
   readonly truncatedChildren: number;
+  /**
+   * Sibling branches folded into this one because their names share a shape.
+   *
+   * Absent when nothing was folded. When set, `segment` is the shape rather than any real
+   * level, so the path is not a topic filter and must not be used as one.
+   */
+  readonly foldedBranches?: number;
 }
 
 export interface CatalogBatchResult {

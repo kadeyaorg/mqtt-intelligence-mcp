@@ -127,6 +127,7 @@ export const topicTreeNodeSchema: z.ZodType = z.lazy(() =>
     isTopic: z.boolean(),
     children: z.array(topicTreeNodeSchema),
     truncatedChildren: z.number(),
+    foldedBranches: z.number().optional(),
   }),
 );
 

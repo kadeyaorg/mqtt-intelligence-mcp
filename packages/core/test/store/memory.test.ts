@@ -71,12 +71,36 @@ describe('MemoryTopicCatalog bounds', () => {
       Array.from({ length: 10 }, (_item, index) => topicDelta(`devices/device-${String(index)}`)),
     );
 
-    const tree = await catalog.tree({ brokerId: BROKER, depth: 2, maxChildren: 3 });
+    // Folding off: this is about truncation, and ten device branches would otherwise fold
+    // into one, which the test below covers on its own.
+    const tree = await catalog.tree({
+      brokerId: BROKER,
+      depth: 2,
+      maxChildren: 3,
+      foldPatterns: false,
+    });
 
     expect(tree.children[0]?.children).toHaveLength(3);
     expect(tree.children[0]?.truncatedChildren).toBe(7);
     // The count still covers everything below, even what is not listed.
     expect(tree.children[0]?.topicCount).toBe(10);
+  });
+
+  it('folds instead of truncating, so a device-keyed namespace stays whole', async () => {
+    const catalog = new MemoryTopicCatalog();
+    await catalog.applyBatch(
+      BROKER,
+      Array.from({ length: 10 }, (_item, index) => topicDelta(`devices/device-${String(index)}`)),
+    );
+
+    const tree = await catalog.tree({ brokerId: BROKER, depth: 2, maxChildren: 3 });
+    const devices = tree.children[0];
+
+    // One shape rather than three branches and a promise that seven more exist.
+    expect(devices?.children).toHaveLength(1);
+    expect(devices?.children[0]?.segment).toBe('device-#');
+    expect(devices?.children[0]?.foldedBranches).toBe(10);
+    expect(devices?.truncatedChildren).toBe(0);
   });
 
   it('caps the page size a caller can ask for', async () => {
@@ -185,5 +209,84 @@ describe('MemoryMessageStore bounds', () => {
     const page = await store.query({ limit: 1000 });
 
     expect(page.items).toHaveLength(2);
+  });
+});
+
+describe('folding sibling branches that share a shape', () => {
+  async function catalogWith(topics: readonly string[]): Promise<MemoryTopicCatalog> {
+    const catalog = new MemoryTopicCatalog();
+    await catalog.applyBatch(
+      CONTRACT_BROKER,
+      topics.map((topic) => topicDelta(parseTopicName(topic))),
+    );
+    return catalog;
+  }
+
+  it('folds branches that differ only in a number', async () => {
+    // Straight from a real line: four filling stations under one machine.
+    const catalog = await catalogWith([
+      'plc/dispense/f1',
+      'plc/dispense/f2',
+      'plc/dispense/f3',
+      'plc/dispense/f4',
+      'plc/dispense/state',
+    ]);
+
+    const tree = await catalog.tree({ brokerId: CONTRACT_BROKER, depth: 3 });
+    const dispense = tree.children[0]?.children[0];
+    const segments = dispense?.children.map((child) => child.segment) ?? [];
+
+    expect(segments).toContain('f#');
+    expect(segments).toContain('state');
+    expect(dispense?.children.find((child) => child.segment === 'f#')?.foldedBranches).toBe(4);
+    // The fold aggregates what it folded rather than hiding it.
+    expect(dispense?.children.find((child) => child.segment === 'f#')?.topicCount).toBe(4);
+  });
+
+  it('leaves two siblings alone, because two is not a pattern', async () => {
+    const catalog = await catalogWith(['plc/washer/f1', 'plc/washer/f2']);
+
+    const tree = await catalog.tree({ brokerId: CONTRACT_BROKER, depth: 3 });
+    const segments = tree.children[0]?.children[0]?.children.map((child) => child.segment) ?? [];
+
+    expect(segments.sort()).toEqual(['f1', 'f2']);
+  });
+
+  it('never folds siblings whose names have nothing variable in common', async () => {
+    const catalog = await catalogWith(['plc/state', 'plc/safety', 'plc/outputs', 'plc/version']);
+
+    const tree = await catalog.tree({ brokerId: CONTRACT_BROKER, depth: 2 });
+    const segments = tree.children[0]?.children.map((child) => child.segment) ?? [];
+
+    expect(segments.sort()).toEqual(['outputs', 'safety', 'state', 'version']);
+  });
+
+  it('folds device identifiers and keeps the subtree below them', async () => {
+    const catalog = await catalogWith([
+      'sensors/3f2504e0-4f89-11d3-9a0c-0305e82c3301/temp',
+      'sensors/3f2504e0-4f89-11d3-9a0c-0305e82c3302/temp',
+      'sensors/3f2504e0-4f89-11d3-9a0c-0305e82c3303/humidity',
+    ]);
+
+    const tree = await catalog.tree({ brokerId: CONTRACT_BROKER, depth: 3 });
+    const folded = tree.children[0]?.children[0];
+
+    expect(folded?.segment).toBe('<uuid>');
+    expect(folded?.foldedBranches).toBe(3);
+    // Everything under the folded branches is merged, not lost.
+    expect(folded?.children.map((child) => child.segment).sort()).toEqual(['humidity', 'temp']);
+  });
+
+  it('shows every branch when folding is turned off', async () => {
+    const catalog = await catalogWith(['plc/dispense/f1', 'plc/dispense/f2', 'plc/dispense/f3']);
+
+    const tree = await catalog.tree({
+      brokerId: CONTRACT_BROKER,
+      depth: 3,
+      foldPatterns: false,
+    });
+    const segments = tree.children[0]?.children[0]?.children.map((child) => child.segment) ?? [];
+
+    expect(segments.sort()).toEqual(['f1', 'f2', 'f3']);
   });
 });

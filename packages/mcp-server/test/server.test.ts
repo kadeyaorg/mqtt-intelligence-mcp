@@ -484,3 +484,44 @@ describe('a payload shape that changes mid-flight', () => {
     expect(text).not.toContain('the shape changed');
   });
 });
+
+describe('a namespace keyed by an identifier', () => {
+  it('folds the branches and says it did, rather than listing them or hiding them', async () => {
+    const instance = await harness();
+    await instance.engine.start();
+    for (let index = 1; index <= 6; index += 1) {
+      instance.transports.last.deliver({
+        topic: `factory/line-01/station/f${String(index)}/state`,
+        payload: new TextEncoder().encode('RUNNING'),
+      });
+    }
+    await instance.clock.advance(200);
+
+    const text = textOf(await call(instance.client, 'mqtt_topic_tree', { depth: 6 }));
+
+    expect(text).toContain('f#');
+    expect(text).toContain('6 branches folded into this shape');
+    // The fold aggregates: the subtree below the folded branches is still there.
+    expect(text).toContain('state');
+  });
+
+  it('lists every branch when the caller turns folding off', async () => {
+    const instance = await harness();
+    await instance.engine.start();
+    for (let index = 1; index <= 6; index += 1) {
+      instance.transports.last.deliver({
+        topic: `factory/line-01/station/f${String(index)}/state`,
+        payload: new TextEncoder().encode('RUNNING'),
+      });
+    }
+    await instance.clock.advance(200);
+
+    const text = textOf(
+      await call(instance.client, 'mqtt_topic_tree', { depth: 6, foldPatterns: false }),
+    );
+
+    expect(text).toContain('f1');
+    expect(text).toContain('f6');
+    expect(text).not.toContain('folded');
+  });
+});

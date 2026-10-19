@@ -79,15 +79,27 @@ gets its turn back immediately.
 
 ## `mqtt_topic_tree`
 
-| Input         | Type          | Notes                               |
-| ------------- | ------------- | ----------------------------------- |
-| `broker`      | string        | Optional with one broker            |
-| `root`        | string[]      | Topic levels to start from          |
-| `depth`       | integer 1–8   | Levels to expand. Default 3         |
-| `maxChildren` | integer 1–200 | Branches per node before truncating |
+| Input          | Type          | Notes                                          |
+| -------------- | ------------- | ---------------------------------------------- |
+| `broker`       | string        | Optional with one broker                       |
+| `root`         | string[]      | Topic levels to start from                     |
+| `depth`        | integer 1–8   | Levels to expand. Default 3                    |
+| `maxChildren`  | integer 1–200 | Branches per node before truncating            |
+| `foldPatterns` | boolean       | Fold look-alike sibling branches. Default true |
 
 The namespace as a tree, with per-branch topic and message counts. Branches cut by
 `maxChildren` are counted rather than silently dropped.
+
+Sibling branches whose names differ only in a number or an identifier are **folded into their
+shape**: `f1` to `f4` become `f#`, and five thousand device ids become `device-#`. A tree
+listing them one by one says nothing a reader can hold; the shape says the system is keyed by
+device id, which is the fact they were after. The fold is always reported with the number of
+branches behind it, the counts aggregate everything it covers, and the subtree below is
+merged rather than lost.
+
+A folded segment is a **shape, not a level**, so the path it appears at is not a topic filter
+and must not be used as one. Three distinct siblings are needed before anything is folded —
+two is not a pattern — and `foldPatterns: false` shows every branch as published.
 
 ## `mqtt_search_topics`
 

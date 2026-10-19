@@ -98,6 +98,8 @@ export interface TopicTreeRequest {
   readonly root?: readonly string[];
   readonly depth?: number;
   readonly maxChildren?: number;
+  /** Fold sibling branches whose names differ only in a number or an identifier. */
+  readonly foldPatterns?: boolean;
 }
 
 export interface SearchTopicsRequest {
@@ -381,6 +383,7 @@ class EngineImplementation implements Engine {
       ...(request.root === undefined ? {} : { root: request.root }),
       ...(request.depth === undefined ? {} : { depth: request.depth }),
       ...(request.maxChildren === undefined ? {} : { maxChildren: request.maxChildren }),
+      ...(request.foldPatterns === undefined ? {} : { foldPatterns: request.foldPatterns }),
     });
     const coverage = await runtime.discovery.coverage();
 
