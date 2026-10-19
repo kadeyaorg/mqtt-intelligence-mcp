@@ -144,7 +144,7 @@ of payloads that carried it, plus any field whose window does not match the topi
 
 It also lists **related topics, with the reason for each**: published under the same branch,
 ending with the same level, or the same name but for a number. Every relation is a fact about
-the names and nothing else — two topics ending in are related by convention, not by
+the names and nothing else — two topics ending in `state` are related by convention, not by
 wiring — and the answer says so, because "related" with no reason is an invitation to assume
 they are connected.
 
