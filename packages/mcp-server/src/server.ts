@@ -22,6 +22,7 @@ import {
   formatInstant,
   formatPayload,
   renderAnswer,
+  renderSchemaFields,
   UNTRUSTED_PAYLOAD_NOTE,
 } from './render/answer.js';
 import {
@@ -30,6 +31,7 @@ import {
   brokerIdSchema,
   coverageSchema,
   messageFactSchema,
+  schemaFieldSchema,
   topicFilterSchema,
   topicNameSchema,
   topicSummarySchema,
@@ -102,6 +104,7 @@ export function createMcpServer(engine: Engine, options: McpServerOptions = {}):
   registerSearchTopics(server, engine, guard);
   registerDescribeTopic(server, engine, guard);
   registerRecentMessages(server, engine, guard);
+  registerInferSchema(server, engine, guard);
 
   return server;
 }
@@ -418,6 +421,16 @@ function registerDescribeTopic(server: McpServer, engine: Engine, guard: Guard):
             .describe(
               'Groups of inter-arrival times, present only when there is more than one. Separate groups mean the gaps fall into separate populations, which a topic published once per cycle does not have. What produces them is not something arrival times can settle.',
             ),
+          schema: z
+            .object({
+              payloadsInspected: z.number(),
+              fields: z.array(schemaFieldSchema),
+              truncated: z.boolean(),
+            })
+            .optional()
+            .describe(
+              'Shape of the JSON payloads inspected so far. A summary of what was seen, not a contract: a field below full presence was absent from some payloads, which is not the same as being optional by design. Use mqtt_infer_schema for the exportable JSON Schema.',
+            ),
           silence: z.object({ forMs: z.number(), ratioToMeanInterval: z.number() }).optional(),
         }),
       ),
@@ -461,6 +474,12 @@ function registerDescribeTopic(server: McpServer, engine: Engine, guard: Guard):
                 .join(
                   ', ',
                 )}. A topic published once per cycle has one group; what produces the others is not something arrival times can settle.`,
+          observations?.schema === undefined
+            ? ''
+            : [
+                `  shape, from ${formatCount(observations.schema.payloadsInspected)} inspected payload(s):`,
+                ...renderSchemaFields(observations.schema.fields),
+              ].join('\n'),
           observations?.silence === undefined
             ? ''
             : `  silent for ${formatDuration(observations.silence.forMs)}, which is ${observations.silence.ratioToMeanInterval.toFixed(1)}× its usual interval`,
@@ -521,6 +540,64 @@ function registerRecentMessages(server: McpServer, engine: Engine, guard: Guard)
               ),
             },
           ],
+          structuredContent: answer,
+        };
+      }),
+  );
+}
+
+function registerInferSchema(server: McpServer, engine: Engine, guard: Guard): void {
+  server.registerTool(
+    'mqtt_infer_schema',
+    {
+      title: 'Infer the schema of an MQTT topic',
+      description: `The shape of a topic's JSON payloads, inferred from the payloads observed so far, as a JSON Schema ready to export and as a flat field list with how often each field was present. Use it to write code against a topic, or to compare a topic's shape with what it used to be. A shape inferred from observation summarises what was seen; it is not a contract, and a field present in only some payloads is reported as such rather than guessed at. ${UNTRUSTED_PAYLOAD_NOTE}`,
+      inputSchema: z.object({
+        broker: brokerIdSchema.optional(),
+        topic: topicNameSchema,
+      }),
+      outputSchema: answerSchema(
+        z.object({
+          brokerId: z.string(),
+          topic: z.string(),
+          payloadsInspected: z
+            .number()
+            .describe(
+              'Payloads folded into the shape. Ingestion samples, so not the message count.',
+            ),
+          messageCount: z.number(),
+          jsonSchema: z.json().describe('JSON Schema draft 2020-12.'),
+          fields: z.array(schemaFieldSchema),
+          truncated: z.boolean(),
+        }),
+      ),
+      annotations: { ...READ_ONLY, idempotentHint: true },
+    },
+    async (args) =>
+      guard('mqtt_infer_schema', async () => {
+        const answer = await engine.inferSchema({
+          ...(args.broker === undefined ? {} : { brokerId: args.broker }),
+          topic: args.topic,
+        });
+        const facts = answer.facts;
+
+        const body =
+          facts.payloadsInspected === 0
+            ? `No JSON payload has been inspected on ${facts.topic}, so there is no shape to report. Ingestion inspects a sample; the topic may still publish JSON.`
+            : [
+                `SCHEMA of ${facts.topic} (broker "${facts.brokerId}")`,
+                `  inferred from ${formatCount(facts.payloadsInspected)} inspected payload(s) of ${formatCount(facts.messageCount)} message(s)`,
+                'FIELDS',
+                ...renderSchemaFields(facts.fields),
+                'JSON SCHEMA',
+                JSON.stringify(facts.jsonSchema, null, 2)
+                  .split('\n')
+                  .map((line) => `  ${line}`)
+                  .join('\n'),
+              ].join('\n');
+
+        return {
+          content: [{ type: 'text' as const, text: renderAnswer(body, answer) }],
           structuredContent: answer,
         };
       }),

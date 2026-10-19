@@ -26,7 +26,8 @@ import { DiscoveryService } from './discovery/index.js';
 import { IngestPipeline } from './ingest/index.js';
 import type { Logger, MetricsRecorder } from './observability/index.js';
 import { createLogger, noopMetrics } from './observability/index.js';
-import type { PayloadViewOptions } from './payload/index.js';
+import type { JsonValue, PayloadViewOptions, SchemaField } from './payload/index.js';
+import { EMPTY_SCHEMA, flattenSchema, toJsonSchema } from './payload/index.js';
 import { createReadPolicy } from './policy/index.js';
 import type {
   Answer,
@@ -42,6 +43,7 @@ import {
   recentMessages as readRecentMessages,
   RETAINED_REPLAY_LIMITATION,
   SAMPLED_HISTORY_LIMITATION,
+  SCHEMA_TRUNCATED_LIMITATION,
   searchTopics as runSearch,
   toTopicFacts,
   toTopicObservations,
@@ -120,6 +122,23 @@ export interface DescribeTopicRequest {
   readonly topic: TopicName;
 }
 
+export interface InferSchemaRequest {
+  readonly brokerId?: BrokerId;
+  readonly topic: TopicName;
+}
+
+export interface InferSchemaFacts {
+  readonly brokerId: BrokerId;
+  readonly topic: TopicName;
+  /** Payloads folded into the shape. Ingestion samples, so this is not the message count. */
+  readonly payloadsInspected: number;
+  readonly messageCount: number;
+  /** JSON Schema draft 2020-12, ready to export.*/
+  readonly jsonSchema: JsonValue;
+  readonly fields: readonly SchemaField[];
+  readonly truncated: boolean;
+}
+
 export interface RecentMessagesRequest {
   readonly brokerId?: BrokerId;
   readonly topic: TopicName;
@@ -142,6 +161,8 @@ export interface Engine {
   searchTopics(request?: SearchTopicsRequest): Promise<Answer<SearchTopicsFacts>>;
   describeTopic(request: DescribeTopicRequest): Promise<Answer<TopicFacts, TopicObservations>>;
   recentMessages(request: RecentMessagesRequest): Promise<Answer<RecentMessagesFacts>>;
+  /** The shape of a topic's JSON payloads, as JSON Schema and as a flat field list. */
+  inferSchema(request: InferSchemaRequest): Promise<Answer<InferSchemaFacts>>;
 }
 
 /** Everything one broker needs, assembled once. */
@@ -425,6 +446,44 @@ class EngineImplementation implements Engine {
     return {
       facts: toTopicFacts(record, lastMessage, this.#viewOptions()),
       observations: toTopicObservations(record, now),
+      coverage,
+      limitations,
+    };
+  }
+
+  async inferSchema(request: InferSchemaRequest): Promise<Answer<InferSchemaFacts>> {
+    const runtime = this.#resolve(request.brokerId);
+    const record = await this.#catalog.get(runtime.config.id, request.topic);
+    if (record === undefined) {
+      throw new NotFoundError(
+        'TOPIC_NOT_OBSERVED',
+        `No message has been observed on "${request.topic}" for broker "${runtime.config.id}". It may still exist: discovery only sees what is published while it is watching.`,
+        { details: { broker: runtime.config.id } },
+      );
+    }
+
+    const schema = record.schema ?? EMPTY_SCHEMA;
+    const coverage = await runtime.discovery.coverage();
+    const limitations = coverageLimitations(coverage);
+    // A shape inferred from a sample is a summary of what was seen, never a contract, and
+    // the number of payloads behind it is what tells a reader how much to trust it.
+    if (record.inspectedCount < record.messageCount) {
+      limitations.push(SAMPLED_HISTORY_LIMITATION);
+    }
+    if (schema.truncated === true) {
+      limitations.push(SCHEMA_TRUNCATED_LIMITATION);
+    }
+
+    return {
+      facts: {
+        brokerId: runtime.config.id,
+        topic: request.topic,
+        payloadsInspected: schema.seen,
+        messageCount: record.messageCount,
+        jsonSchema: toJsonSchema(schema),
+        fields: flattenSchema(schema),
+        truncated: schema.truncated === true,
+      },
       coverage,
       limitations,
     };

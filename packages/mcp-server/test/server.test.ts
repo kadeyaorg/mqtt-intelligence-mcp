@@ -81,7 +81,7 @@ function textOf(result: ToolResult): string {
 }
 
 describe('the tool surface', () => {
-  it('exposes exactly six tools, all read-only', async () => {
+  it('exposes exactly seven tools, all read-only', async () => {
     const { client } = await harness();
 
     const listed = await client.listTools();
@@ -90,6 +90,7 @@ describe('the tool surface', () => {
       'mqtt_describe_topic',
       'mqtt_discover_topics',
       'mqtt_get_recent_messages',
+      'mqtt_infer_schema',
       'mqtt_list_brokers',
       'mqtt_search_topics',
       'mqtt_topic_tree',
@@ -341,5 +342,92 @@ describe('a topic published more than once per cycle', () => {
 
     expect(text).toContain('intervals: mean');
     expect(text).not.toContain('intervals fall into');
+  });
+});
+
+describe('the shape of a topic', () => {
+  /** Publishes payloads that differ, which is what makes a schema worth inferring. */
+  async function publishing(): Promise<Harness> {
+    const instance = await harness();
+    await instance.engine.start();
+    const encoder = new TextEncoder();
+    const payloads = [
+      '{"state":"READY","cycleCount":1,"temperatureC":41.2}',
+      '{"state":"STOPPED","cycleCount":2,"temperatureC":42.9,"lastError":42}',
+      '{"state":"READY","cycleCount":3,"temperatureC":null}',
+      '{"state":"READY","cycleCount":4,"temperatureC":41.8}',
+    ];
+    for (const payload of payloads) {
+      instance.transports.last.deliver({
+        topic: 'factory/line-01/robot/status',
+        payload: encoder.encode(payload),
+      });
+      // One payload is inspected per topic per flush, so each needs its own tick.
+      await instance.clock.advance(200);
+    }
+    return instance;
+  }
+
+  it('reports the fields, their types and how often each was present', async () => {
+    const { client } = await publishing();
+
+    const result = await call(client, 'mqtt_infer_schema', {
+      topic: 'factory/line-01/robot/status',
+    });
+    const text = textOf(result);
+
+    expect(result.isError).toBeFalsy();
+    expect(text).toContain('state: string — always');
+    expect(text).toContain('cycleCount: number — always');
+    // Seen once in four payloads: a fact about what arrived, not a claim about intent.
+    expect(text).toContain('lastError: number — in 25% of payloads');
+    // A field that is sometimes null keeps both types rather than the last one.
+    expect(text).toMatch(/temperatureC: (null \| number|number \| null)/);
+  });
+
+  it('exports a JSON Schema with the fields that were always there as required', async () => {
+    const { client } = await publishing();
+
+    const result = await call(client, 'mqtt_infer_schema', {
+      topic: 'factory/line-01/robot/status',
+    });
+
+    expect(result.structuredContent).toMatchObject({
+      facts: {
+        jsonSchema: {
+          type: 'object',
+          required: ['cycleCount', 'state', 'temperatureC'],
+        },
+      },
+    });
+    expect(textOf(result)).toContain('JSON SCHEMA');
+  });
+
+  it('puts the same shape in describe_topic, so one call answers "what is this topic"', async () => {
+    const { client } = await publishing();
+
+    const text = textOf(
+      await call(client, 'mqtt_describe_topic', { topic: 'factory/line-01/robot/status' }),
+    );
+
+    expect(text).toContain('shape, from');
+    expect(text).toContain('cycleCount: number — always');
+  });
+
+  it('says plainly when nothing has been inspected rather than returning an empty shape', async () => {
+    const instance = await harness();
+    await instance.engine.start();
+    instance.transports.last.deliver({
+      topic: 'factory/line-01/camera/frame',
+      payload: new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x00, 0x01, 0x02]),
+    });
+    await instance.clock.advance(200);
+
+    const text = textOf(
+      await call(instance.client, 'mqtt_infer_schema', { topic: 'factory/line-01/camera/frame' }),
+    );
+
+    expect(text).toContain('no shape to report');
+    expect(text).toContain('the topic may still publish JSON');
   });
 });

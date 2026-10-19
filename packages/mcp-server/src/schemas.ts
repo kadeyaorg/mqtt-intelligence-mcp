@@ -129,3 +129,10 @@ export const topicTreeNodeSchema: z.ZodType = z.lazy(() =>
     truncatedChildren: z.number(),
   }),
 );
+
+export const schemaFieldSchema = z.object({
+  path: z.string().describe('Dotted path; "[]" is an array element and "{}" a map value.'),
+  types: z.array(z.string()),
+  presence: z.number().describe('Share of the parent values that carried it, 0 to 1.'),
+  truncated: z.boolean(),
+});

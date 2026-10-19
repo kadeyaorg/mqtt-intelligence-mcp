@@ -11,6 +11,8 @@
  * answer wins, since that is the one an engineer means.
  */
 
+import type { JsonValue } from './json.js';
+
 export type PayloadKind = 'empty' | 'json' | 'number' | 'boolean' | 'text' | 'binary' | 'unknown';
 
 export type JsonType = 'object' | 'array' | 'string' | 'number' | 'boolean' | 'null';
@@ -87,6 +89,19 @@ function jsonTypeOf(value: unknown): JsonType {
 }
 
 /**
+ * A classification, with the parsed value when the payload was JSON.
+ *
+ * The value exists so that a caller needing the structure — schema inference — does not parse
+ * a second time. It is deliberately **not** part of `PayloadClassification`: that type is
+ * stored beside every kept message, and a parsed document hanging off it would hold the whole
+ * object graph alive for as long as the message is kept.
+ */
+export interface ClassifiedPayload {
+  readonly classification: PayloadClassification;
+  readonly json?: JsonValue;
+}
+
+/**
  * Classifies a payload from its bytes.
  *
  * Order: empty, then oversized, then invalid UTF-8 or control-heavy bytes as binary, then
@@ -96,35 +111,44 @@ export function classifyPayload(
   bytes: Uint8Array,
   options: ClassifyOptions = {},
 ): PayloadClassification {
+  return classifyWithValue(bytes, options).classification;
+}
+
+/** As `classifyPayload`, and hands back the parsed value so JSON is not parsed twice. */
+export function classifyWithValue(
+  bytes: Uint8Array,
+  options: ClassifyOptions = {},
+): ClassifiedPayload {
   if (bytes.byteLength === 0) {
-    return { kind: 'empty' };
+    return { classification: { kind: 'empty' } };
   }
   const maxInspectBytes = options.maxInspectBytes ?? DEFAULT_MAX_INSPECT_BYTES;
   if (bytes.byteLength > maxInspectBytes) {
-    return { kind: 'unknown', reason: 'oversized' };
+    return { classification: { kind: 'unknown', reason: 'oversized' } };
   }
 
   const text = decodeUtf8(bytes);
   if (text === undefined || looksBinary(text)) {
-    return { kind: 'binary' };
+    return { classification: { kind: 'binary' } };
   }
 
   const trimmed = text.trim();
   if (trimmed === 'true' || trimmed === 'false') {
-    return { kind: 'boolean' };
+    return { classification: { kind: 'boolean' } };
   }
   if (JSON_NUMBER.test(trimmed) && Number.isFinite(Number(trimmed))) {
-    return { kind: 'number' };
+    return { classification: { kind: 'number' } };
   }
 
   const first = trimmed[0];
   if (first === '{' || first === '[' || first === '"') {
     try {
-      return { kind: 'json', jsonType: jsonTypeOf(JSON.parse(trimmed)) };
+      const parsed: JsonValue = JSON.parse(trimmed) as JsonValue;
+      return { classification: { kind: 'json', jsonType: jsonTypeOf(parsed) }, json: parsed };
     } catch {
       // A truncated or malformed document is still text an engineer can read.
-      return { kind: 'text' };
+      return { classification: { kind: 'text' } };
     }
   }
-  return { kind: 'text' };
+  return { classification: { kind: 'text' } };
 }

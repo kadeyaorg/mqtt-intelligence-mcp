@@ -3,6 +3,7 @@ export {
   DELIVERED_QOS_LIMITATION,
   RETAINED_REPLAY_LIMITATION,
   SAMPLED_HISTORY_LIMITATION,
+  SCHEMA_TRUNCATED_LIMITATION,
   SHORT_OBSERVATION_MS,
   truncatedResults,
 } from './answer.js';
@@ -20,6 +21,7 @@ export {
 export type {
   IntervalObservation,
   MessageFact,
+  SchemaObservation,
   TopicFacts,
   TopicObservations,
   TopicSummary,

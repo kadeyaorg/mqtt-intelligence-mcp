@@ -60,6 +60,7 @@ export type { Clock, Timer } from './domain/clock.js';
 
 export {
   classifyPayload,
+  classifyWithValue,
   countNodes,
   decodeUtf8,
   DEFAULT_HEX_PREVIEW_BYTES,
@@ -68,6 +69,7 @@ export {
   DEFAULT_MAX_TEXT_CHARS,
   DEFAULT_SCHEMA_LIMITS,
   EMPTY_SCHEMA,
+  flattenSchema,
   escapeControlCharacters,
   limitJson,
   looksBinary,
@@ -78,6 +80,7 @@ export {
   toPayloadView,
 } from './payload/index.js';
 export type {
+  ClassifiedPayload,
   ClassifyOptions,
   JsonLimits,
   JsonObject,
@@ -89,6 +92,7 @@ export type {
   PayloadKind,
   PayloadView,
   PayloadViewOptions,
+  SchemaField,
   SchemaLimits,
   SchemaNode,
   SchemaTypeCounts,
@@ -199,6 +203,8 @@ export type {
   DescribeTopicRequest,
   DiscoverFacts,
   DiscoverRequest,
+  InferSchemaFacts,
+  InferSchemaRequest,
   Engine,
   EngineDependencies,
   OperationOptions,
@@ -214,6 +220,7 @@ export {
   DELIVERED_QOS_LIMITATION,
   RETAINED_REPLAY_LIMITATION,
   SAMPLED_HISTORY_LIMITATION,
+  SCHEMA_TRUNCATED_LIMITATION,
   SHORT_OBSERVATION_MS,
   truncatedResults,
 } from './query/index.js';
@@ -223,6 +230,7 @@ export type {
   Limitation,
   LimitationCode,
   MessageFact,
+  SchemaObservation,
   TopicFacts,
   TopicObservations,
   TopicSummary,

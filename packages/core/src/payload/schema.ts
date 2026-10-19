@@ -349,3 +349,50 @@ export function toJsonSchema(
 
   return schema;
 }
+
+/** One position in a schema, flattened for reading rather than for validating. */
+export interface SchemaField {
+  /** Dotted path, with `[]` for array elements and `{}` for map values. */
+  readonly path: string;
+  readonly types: readonly SchemaTypeName[];
+  /** Share of the parent's values that carried this field, from 0 to 1. */
+  readonly presence: number;
+  readonly truncated: boolean;
+}
+
+/**
+ * Flattens a schema into a list a person can scan.
+ *
+ * A nested JSON Schema is the right artefact to export and the wrong one to read in a
+ * terminal. This gives one line per position, with the presence that makes optionality
+ * visible: "0.40" says far more than "optional".
+ */
+export function flattenSchema(node: SchemaNode, maxFields = 64): readonly SchemaField[] {
+  const fields: SchemaField[] = [];
+
+  const walk = (current: SchemaNode, path: string, parentValues: number): void => {
+    if (fields.length >= maxFields) {
+      return;
+    }
+    if (path !== '') {
+      fields.push({
+        path,
+        types: observedTypes(current),
+        presence: parentValues === 0 ? 1 : Math.min(1, current.seen / parentValues),
+        truncated: current.truncated === true,
+      });
+    }
+    for (const [name, child] of Object.entries(current.fields ?? {})) {
+      walk(child, path === '' ? name : `${path}.${name}`, current.types.object);
+    }
+    if (current.mapValues !== undefined) {
+      walk(current.mapValues, `${path}{}`, current.mapValues.seen);
+    }
+    if (current.items !== undefined) {
+      walk(current.items, `${path}[]`, current.items.seen);
+    }
+  };
+
+  walk(node, '', node.seen);
+  return fields;
+}

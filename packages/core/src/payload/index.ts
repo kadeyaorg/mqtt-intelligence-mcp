@@ -1,5 +1,12 @@
-export { classifyPayload, decodeUtf8, DEFAULT_MAX_INSPECT_BYTES, looksBinary } from './classify.js';
+export {
+  classifyPayload,
+  classifyWithValue,
+  decodeUtf8,
+  DEFAULT_MAX_INSPECT_BYTES,
+  looksBinary,
+} from './classify.js';
 export type {
+  ClassifiedPayload,
   ClassifyOptions,
   JsonType,
   PayloadClassification,
@@ -22,9 +29,16 @@ export {
   countNodes,
   DEFAULT_SCHEMA_LIMITS,
   EMPTY_SCHEMA,
+  flattenSchema,
   mergeSchemas,
   observedTypes,
   observeJson,
   toJsonSchema,
 } from './schema.js';
-export type { SchemaLimits, SchemaNode, SchemaTypeCounts, SchemaTypeName } from './schema.js';
+export type {
+  SchemaField,
+  SchemaLimits,
+  SchemaNode,
+  SchemaTypeCounts,
+  SchemaTypeName,
+} from './schema.js';
