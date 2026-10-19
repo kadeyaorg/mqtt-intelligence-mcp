@@ -22,6 +22,7 @@ import {
   formatInstant,
   formatPayload,
   renderAnswer,
+  renderSchemaChanges,
   renderSchemaFields,
   UNTRUSTED_PAYLOAD_NOTE,
 } from './render/answer.js';
@@ -31,6 +32,7 @@ import {
   brokerIdSchema,
   coverageSchema,
   messageFactSchema,
+  schemaChangeSchema,
   schemaFieldSchema,
   topicFilterSchema,
   topicNameSchema,
@@ -425,6 +427,7 @@ function registerDescribeTopic(server: McpServer, engine: Engine, guard: Guard):
             .object({
               payloadsInspected: z.number(),
               fields: z.array(schemaFieldSchema),
+              changes: z.array(schemaChangeSchema),
               truncated: z.boolean(),
             })
             .optional()
@@ -479,6 +482,7 @@ function registerDescribeTopic(server: McpServer, engine: Engine, guard: Guard):
             : [
                 `  shape, from ${formatCount(observations.schema.payloadsInspected)} inspected payload(s):`,
                 ...renderSchemaFields(observations.schema.fields),
+                ...renderSchemaChanges(observations.schema.changes),
               ].join('\n'),
           observations?.silence === undefined
             ? ''
@@ -568,6 +572,7 @@ function registerInferSchema(server: McpServer, engine: Engine, guard: Guard): v
           messageCount: z.number(),
           jsonSchema: z.json().describe('JSON Schema draft 2020-12.'),
           fields: z.array(schemaFieldSchema),
+          changes: z.array(schemaChangeSchema),
           truncated: z.boolean(),
         }),
       ),
@@ -589,6 +594,7 @@ function registerInferSchema(server: McpServer, engine: Engine, guard: Guard): v
                 `  inferred from ${formatCount(facts.payloadsInspected)} inspected payload(s) of ${formatCount(facts.messageCount)} message(s)`,
                 'FIELDS',
                 ...renderSchemaFields(facts.fields),
+                ...renderSchemaChanges(facts.changes),
                 'JSON SCHEMA',
                 JSON.stringify(facts.jsonSchema, null, 2)
                   .split('\n')

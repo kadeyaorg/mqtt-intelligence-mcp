@@ -116,3 +116,31 @@ export function renderSchemaFields(
   }
   return lines;
 }
+
+/**
+ * The fields whose window does not match the topic's, newest last.
+ *
+ * Deliberately flat and dated. A field that stopped and another that started within a second
+ * of each other is what a rename looks like, and putting the two timestamps side by side is
+ * what lets the reader see it — without the server claiming it, since two unrelated changes
+ * look exactly the same from arrival times.
+ */
+export function renderSchemaChanges(
+  changes: readonly {
+    readonly path: string;
+    readonly kind: 'appeared' | 'disappeared';
+    readonly at: number;
+    readonly types: readonly string[];
+  }[],
+): readonly string[] {
+  if (changes.length === 0) {
+    return [];
+  }
+  return [
+    '  the shape changed while we were watching:',
+    ...changes.map(
+      (change) =>
+        `    ${change.path} ${change.kind} at ${formatInstant(change.at)} (${change.types.join(' | ')})`,
+    ),
+  ];
+}

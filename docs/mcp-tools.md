@@ -128,7 +128,7 @@ and a long one between cycles. The answer reports that shape and not its cause, 
 arrival times cannot settle whether it is two publishers, one loop publishing twice, or a
 retry.
 mean, and the shape of the JSON payloads inspected so far — one line per field, with the share
-of payloads that carried it.
+of payloads that carried it, plus any field whose window does not match the topic's.
 
 A topic never observed returns `TOPIC_NOT_OBSERVED` with a hint, not an empty answer: an empty
 answer invites the conclusion that the topic does not exist.
@@ -168,8 +168,13 @@ An object with more than 32 distinct keys is reported as a map through
 record with a thousand fields. Nesting beyond six levels stops, and `SCHEMA_TRUNCATED` appears
 in the limitations.
 
-Use it to write code against a topic, or to compare a topic's shape with what it used to be —
-which is how a silently renamed field gets caught.
+It also reports **positions whose observation window does not match the topic's**: a field
+that stopped appearing, one that started. That is how a silently renamed field becomes
+visible — the old name ends and the new one begins at the same moment — and it is reported as
+two dated facts rather than as a rename, because two unrelated changes look identical from
+arrival times and only someone who knows the firmware can tell which it was.
+
+A window too short to compare against reports nothing: everything in it is equally new.
 
 ---
 
