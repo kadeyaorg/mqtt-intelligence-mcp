@@ -39,6 +39,7 @@ import type {
 } from './query/index.js';
 import {
   coverageLimitations,
+  relatedTopics,
   DELIVERED_QOS_LIMITATION,
   recentMessages as readRecentMessages,
   RETAINED_REPLAY_LIMITATION,
@@ -463,9 +464,14 @@ class EngineImplementation implements Engine {
       limitations.push(SAMPLED_HISTORY_LIMITATION);
     }
 
+    const related = await relatedTopics(this.#catalog, runtime.config.id, request.topic);
+
     return {
       facts: toTopicFacts(record, lastMessage, this.#viewOptions()),
-      observations: toTopicObservations(record, now),
+      observations: {
+        ...toTopicObservations(record, now),
+        ...(related.length === 0 ? {} : { related }),
+      },
       coverage,
       limitations,
     };
