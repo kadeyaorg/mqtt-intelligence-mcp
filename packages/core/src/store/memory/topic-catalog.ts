@@ -197,7 +197,9 @@ export class MemoryTopicCatalog implements TopicCatalog {
       startsWithLevels(record.topic, root),
     );
 
-    return Promise.resolve(buildNode(root, records, depth, maxChildren));
+    return Promise.resolve(
+      buildNode(root, records, depth, maxChildren, query.foldPatterns ?? true),
+    );
   }
 
   stats(brokerId: BrokerId): Promise<CatalogStats> {
@@ -262,11 +264,72 @@ function startsWithLevels(topic: TopicName, root: readonly string[]): boolean {
   return root.every((level, index) => levels[index] === level);
 }
 
+/** Segments differing only in a number or an identifier share a shape. */
+const DIGIT_RUN = /\d+/g;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * The shape of a level name, with its variable part replaced.
+ *
+ * `f1` and `f2` share `f#`; two device uuids share `<uuid>`. A name with nothing variable is
+ * its own shape, which is what stops unrelated siblings being folded together.
+ */
+function shapeOf(segment: string): string {
+  if (UUID.test(segment)) {
+    return '<uuid>';
+  }
+  return segment.replace(DIGIT_RUN, '#');
+}
+
+/** Distinct sibling names sharing a shape before folding is worth doing. */
+const MIN_FOLDED_BRANCHES = 3;
+
+/**
+ * Folds sibling groups whose names share a shape.
+ *
+ * A tree with five thousand device branches tells a reader nothing; the same tree with one
+ * `device-#` branch tells them the system is keyed by device id, which is the fact they were
+ * after. The fold is always reported, never silent, and the folded segment is a shape rather
+ * than a real level, so it is not a path anyone can subscribe to.
+ */
+function foldGroups(
+  groups: Map<string, TopicRecord[]>,
+): { segment: string; records: TopicRecord[]; folded: number }[] {
+  const byShape = new Map<string, string[]>();
+  for (const segment of groups.keys()) {
+    const shape = shapeOf(segment);
+    const names = byShape.get(shape);
+    if (names === undefined) {
+      byShape.set(shape, [segment]);
+    } else {
+      names.push(segment);
+    }
+  }
+
+  const folded: { segment: string; records: TopicRecord[]; folded: number }[] = [];
+  for (const [shape, names] of byShape) {
+    if (names.length < MIN_FOLDED_BRANCHES || (names.length === 1 && names[0] === shape)) {
+      for (const name of names) {
+        folded.push({ segment: name, records: groups.get(name) ?? [], folded: 0 });
+      }
+      continue;
+    }
+    folded.push({
+      segment: shape,
+      records: names.flatMap((name) => groups.get(name) ?? []),
+      folded: names.length,
+    });
+  }
+  return folded;
+}
+
 function buildNode(
   path: readonly string[],
   records: readonly TopicRecord[],
   depth: number,
   maxChildren: number,
+  foldPatterns: boolean,
+  foldedBranches = 0,
 ): TopicTreeNode {
   const topicCount = records.length;
   const messageCount = records.reduce((total, record) => total + record.messageCount, 0);
@@ -286,8 +349,9 @@ function buildNode(
     isTopic,
   };
 
+  const fold = foldedBranches > 0 ? { foldedBranches } : {};
   if (depth <= 0) {
-    return { ...base, children: [], truncatedChildren: 0 };
+    return { ...base, ...fold, children: [], truncatedChildren: 0 };
   }
 
   const groups = new Map<string, TopicRecord[]>();
@@ -305,16 +369,27 @@ function buildNode(
     }
   }
 
-  const sorted = [...groups.entries()].sort(
-    ([leftSegment, left], [rightSegment, right]) =>
-      right.length - left.length || leftSegment.localeCompare(rightSegment),
+  const entries = foldPatterns
+    ? foldGroups(groups)
+    : [...groups.entries()].map(([segment, records]) => ({ segment, records, folded: 0 }));
+  const sorted = entries.sort(
+    (left, right) =>
+      right.records.length - left.records.length || left.segment.localeCompare(right.segment),
   );
   const visible = sorted.slice(0, maxChildren);
 
   return {
     ...base,
-    children: visible.map(([segment, group]) =>
-      buildNode([...path, segment], group, depth - 1, maxChildren),
+    ...fold,
+    children: visible.map((entry) =>
+      buildNode(
+        [...path, entry.segment],
+        entry.records,
+        depth - 1,
+        maxChildren,
+        foldPatterns,
+        entry.folded,
+      ),
     ),
     truncatedChildren: sorted.length - visible.length,
   };
