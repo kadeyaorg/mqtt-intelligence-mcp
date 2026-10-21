@@ -33,6 +33,13 @@ export interface TopicQuery {
   readonly activeSince?: number;
   /** Only topics silent since this instant, which is how "what stopped?" is asked. */
   readonly silentSince?: number;
+  /**
+   * Only topics first seen at or after this instant, which is how "what is new?" is asked.
+   *
+   * First seen means first seen **by this server**, not first published. A topic that has
+   * existed for years looks new the first time we are watching when it publishes.
+   */
+  readonly firstSeenSince?: number;
   readonly sortBy?: TopicSortKey;
   readonly descending?: boolean;
   readonly limit?: number;

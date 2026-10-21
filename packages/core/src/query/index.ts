@@ -26,3 +26,6 @@ export type {
   TopicObservations,
   TopicSummary,
 } from './queries.js';
+
+export { relatedTopics } from './related.js';
+export type { RelatedOptions, RelatedTopic, RelationReason } from './related.js';

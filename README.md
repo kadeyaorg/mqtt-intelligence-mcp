@@ -227,7 +227,7 @@ The engine is a plain TypeScript library with **no MCP dependency**, so the same
 a CLI, a service or someone else's program. MQTT access, storage, time, logs and metrics all
 sit behind ports, each with a fake beside it.
 
-[docs/architecture.md](docs/architecture.md) · [the 19 ADRs](docs/adr/README.md) ·
+[docs/architecture.md](docs/architecture.md) · [the 20 ADRs](docs/adr/README.md) ·
 [the design document](docs/proposal/README.md)
 
 ## Repository layout

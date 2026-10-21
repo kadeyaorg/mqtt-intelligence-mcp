@@ -142,6 +142,17 @@ retry.
 mean, and the shape of the JSON payloads inspected so far — one line per field, with the share
 of payloads that carried it, plus any field whose window does not match the topic's.
 
+It also lists **related topics, with the reason for each**: published under the same branch,
+ending with the same level, or the same name but for a number. Every relation is a fact about
+the names and nothing else — two topics ending in `state` are related by convention, not by
+wiring — and the answer says so, because "related" with no reason is an invitation to assume
+they are connected.
+
+Temporal relations are deliberately absent. "These two always publish together" would be the
+most useful thing here and the most dangerous: honest co-occurrence needs per-pair state that
+grows with the square of the namespace, and of everything this server could report it is the
+one most certain to be read as cause.
+
 A topic never observed returns `TOPIC_NOT_OBSERVED` with a hint, not an empty answer: an empty
 answer invites the conclusion that the topic does not exist.
 

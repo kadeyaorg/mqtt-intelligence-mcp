@@ -219,6 +219,7 @@ export type {
 
 export {
   coverageLimitations,
+  relatedTopics,
   DELIVERED_QOS_LIMITATION,
   RETAINED_REPLAY_LIMITATION,
   SAMPLED_HISTORY_LIMITATION,
@@ -232,6 +233,9 @@ export type {
   Limitation,
   LimitationCode,
   MessageFact,
+  RelatedOptions,
+  RelatedTopic,
+  RelationReason,
   SchemaObservation,
   TopicFacts,
   TopicObservations,

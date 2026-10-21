@@ -22,6 +22,7 @@ import {
   formatInstant,
   formatPayload,
   renderAnswer,
+  renderRelatedTopics,
   renderSchemaChanges,
   renderSchemaFields,
   UNTRUSTED_PAYLOAD_NOTE,
@@ -32,6 +33,7 @@ import {
   brokerIdSchema,
   coverageSchema,
   messageFactSchema,
+  relatedTopicSchema,
   schemaChangeSchema,
   schemaFieldSchema,
   topicFilterSchema,
@@ -335,6 +337,14 @@ function registerSearchTopics(server: McpServer, engine: Engine, guard: Guard): 
           .min(0)
           .optional()
           .describe('Only topics with no live message in the last N milliseconds.'),
+        firstSeenSinceMs: z
+          .number()
+          .int()
+          .min(0)
+          .optional()
+          .describe(
+            'Only topics this server first saw in the last N milliseconds, which is how "what is new?" is asked. First seen means first seen here, not first published: a topic that has existed for years looks new the first time we are watching when it publishes.',
+          ),
         sortBy: z.enum(['topic', 'lastSeenAt', 'messageCount', 'rate']).optional(),
         descending: z.boolean().optional(),
         limit: z.number().int().min(1).max(200).optional(),
@@ -350,13 +360,17 @@ function registerSearchTopics(server: McpServer, engine: Engine, guard: Guard): 
     },
     async (args) =>
       guard('mqtt_search_topics', async () => {
-        const now = Date.now();
+        // No clock here on purpose: the engine owns time, so durations go through as they
+        // arrived and an engine on a different clock still answers about its own present.
         const answer = await engine.searchTopics({
           ...(args.broker === undefined ? {} : { brokerId: args.broker }),
           ...(args.filter === undefined ? {} : { filter: args.filter }),
           ...(args.text === undefined ? {} : { text: args.text }),
-          ...(args.activeSinceMs === undefined ? {} : { activeSince: now - args.activeSinceMs }),
-          ...(args.silentForMs === undefined ? {} : { silentSince: now - args.silentForMs }),
+          ...(args.activeSinceMs === undefined ? {} : { activeWithinMs: args.activeSinceMs }),
+          ...(args.silentForMs === undefined ? {} : { silentForMs: args.silentForMs }),
+          ...(args.firstSeenSinceMs === undefined
+            ? {}
+            : { firstSeenWithinMs: args.firstSeenSinceMs }),
           ...(args.sortBy === undefined ? {} : { sortBy: args.sortBy }),
           ...(args.descending === undefined ? {} : { descending: args.descending }),
           ...(args.limit === undefined ? {} : { limit: args.limit }),
@@ -446,6 +460,12 @@ function registerDescribeTopic(server: McpServer, engine: Engine, guard: Guard):
             .describe(
               'Shape of the JSON payloads inspected so far. A summary of what was seen, not a contract: a field below full presence was absent from some payloads, which is not the same as being optional by design. Use mqtt_infer_schema for the exportable JSON Schema.',
             ),
+          related: z
+            .array(relatedTopicSchema)
+            .optional()
+            .describe(
+              'Other topics related to this one by name. Relations are facts about the names and nothing else: two topics ending in the same level are related by convention, not by wiring, and each carries the reason so the claim can be judged rather than assumed.',
+            ),
           silence: z.object({ forMs: z.number(), ratioToMeanInterval: z.number() }).optional(),
         }),
       ),
@@ -496,6 +516,9 @@ function registerDescribeTopic(server: McpServer, engine: Engine, guard: Guard):
                 ...renderSchemaFields(observations.schema.fields),
                 ...renderSchemaChanges(observations.schema.changes),
               ].join('\n'),
+          observations?.related === undefined
+            ? ''
+            : renderRelatedTopics(observations.related).join('\n'),
           observations?.silence === undefined
             ? ''
             : `  silent for ${formatDuration(observations.silence.forMs)}, which is ${observations.silence.ratioToMeanInterval.toFixed(1)}× its usual interval`,
