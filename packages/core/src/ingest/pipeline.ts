@@ -24,8 +24,8 @@ import type { TopicName } from '../domain/topic.js';
 import { isTopicName } from '../domain/topic.js';
 import type { Logger, MetricsRecorder } from '../observability/index.js';
 import { noopLogger, noopMetrics } from '../observability/index.js';
-import type { PayloadKind, SchemaNode } from '../payload/index.js';
-import { classifyWithValue, observeJson } from '../payload/index.js';
+import type { PayloadDecoder, PayloadKind, SchemaNode } from '../payload/index.js';
+import { classifyWithValue, observeJson, runDecoders } from '../payload/index.js';
 import type { ReadPolicy } from '../policy/index.js';
 import type { TopicCatalog } from '../catalog/index.js';
 import type { MessageStore, ObservedMessage } from '../store/index.js';
@@ -66,6 +66,8 @@ export interface IngestCounters {
   readonly payloadsDropped: number;
   /** Payloads not classified because the flush budget was spent. */
   readonly notInspected: number;
+  /** Times a decoder threw. The decoder is at fault, not the payload. */
+  readonly decoderErrors: number;
   readonly flushes: number;
 }
 
@@ -78,6 +80,12 @@ export interface IngestPipelineDependencies {
   readonly logger?: Logger;
   readonly metrics?: MetricsRecorder;
   readonly limits?: Partial<IngestLimits>;
+  /**
+   * Decoders offered any payload the classifier could only call binary, in order.
+   *
+   * None ship with the core: each format carries a dependency or a specification of its own.
+   */
+  readonly decoders?: readonly PayloadDecoder[];
 }
 
 /** What one topic accumulated since the last flush. */
@@ -110,6 +118,7 @@ const METRIC_FLUSH = 'mqtt_intelligence.ingest.flush.duration';
 export class IngestPipeline {
   readonly #brokerId: BrokerId;
   readonly #policy: ReadPolicy;
+  readonly #decoders: readonly PayloadDecoder[];
   readonly #catalog: TopicCatalog;
   readonly #messageStore: MessageStore;
   readonly #clock: Clock;
@@ -138,6 +147,7 @@ export class IngestPipeline {
     invalidTopics: 0,
     payloadsDropped: 0,
     notInspected: 0,
+    decoderErrors: 0,
     flushes: 0,
   };
 
@@ -152,6 +162,7 @@ export class IngestPipeline {
       component: 'ingest',
     });
     this.#limits = { ...DEFAULT_INGEST_LIMITS, ...dependencies.limits };
+    this.#decoders = dependencies.decoders ?? [];
 
     const metrics = dependencies.metrics ?? noopMetrics;
     this.#received = metrics.counter(METRIC_RECEIVED, { description: 'Messages observed.' });
@@ -268,6 +279,7 @@ export class IngestPipeline {
     const messages: ObservedMessage[] = [];
     let inspections = 0;
     let notInspected = 0;
+    let decoderErrors = 0;
 
     for (const [topic, accumulator] of batch) {
       const payloadKinds: Partial<Record<PayloadKind, number>> = {};
@@ -279,20 +291,49 @@ export class IngestPipeline {
         const inspected = inspect
           ? classifyWithValue(pending.payload, { maxInspectBytes: this.#limits.maxInspectBytes })
           : { classification: { kind: 'unknown', reason: 'budget-exhausted' } as const };
-        const classification = inspected.classification;
+        let classification = inspected.classification;
+        let structure = inspected.json;
+
+        // Binary is the classifier saying "I cannot read this", which is exactly where a
+        // decoder earns its place. Nothing it produces escapes the inspection budget: this
+        // runs for the one payload per topic that was going to be inspected anyway.
+        if (inspect && classification.kind === 'binary' && this.#decoders.length > 0) {
+          const result = runDecoders(
+            pending.payload,
+            {
+              topic,
+              ...(pending.properties?.contentType === undefined
+                ? {}
+                : { contentType: pending.properties.contentType }),
+              ...(pending.properties?.userProperties === undefined
+                ? {}
+                : { userProperties: pending.properties.userProperties }),
+            },
+            this.#decoders,
+          );
+          for (const failure of result.failures) {
+            decoderErrors += 1;
+            this.#logger.warn('A payload decoder threw', {
+              decoder: failure.decoder,
+              topic,
+              error: failure.error,
+            });
+          }
+          if (result.outcome !== undefined) {
+            classification = { kind: 'decoded', decodedBy: result.outcome.decoder };
+            structure = result.outcome.value;
+          }
+        }
 
         if (inspect) {
           inspections += 1;
           inspectedCount = 1;
           payloadKinds[classification.kind] = 1;
-          if (inspected.json !== undefined) {
+          if (structure !== undefined) {
             // The shape rides on the payloads that were going to be parsed anyway, so
-            // inference costs no extra parse and obeys the same inspection budget.
-            accumulator.schema = observeJson(
-              accumulator.schema,
-              inspected.json,
-              accumulator.pendingAt,
-            );
+            // inference costs no extra parse and obeys the same inspection budget. A
+            // decoded payload has a shape like any other, and gets one.
+            accumulator.schema = observeJson(accumulator.schema, structure, accumulator.pendingAt);
           }
         } else {
           notInspected += 1;
@@ -333,6 +374,7 @@ export class IngestPipeline {
     this.#counters = {
       ...this.#counters,
       notInspected: this.#counters.notInspected + notInspected,
+      decoderErrors: this.#counters.decoderErrors + decoderErrors,
       flushes: this.#counters.flushes + 1,
     };
     this.#flushDuration.record(this.#clock.monotonic() - startedAt, { broker: this.#brokerId });

@@ -45,6 +45,10 @@ export function formatPayload(payload: PayloadView): string {
       return `text${payload.truncated ? ' (truncated)' : ''}: ${payload.text}`;
     case 'binary':
       return `binary, ${formatCount(payload.size)} bytes${payload.sha256 === undefined ? '' : `, sha256 ${payload.sha256.slice(0, 16)}…`} [${payload.hexPreview}]`;
+    case 'decoded':
+      // The decoder is named first, every time: these bytes were not JSON, and a reader who
+      // takes them for JSON will write a consumer that breaks on the real wire format.
+      return `decoded by ${payload.decoder}${payload.truncated ? ' (truncated)' : ''}${payload.redactedKeys > 0 ? `, ${String(payload.redactedKeys)} key(s) redacted` : ''}: ${JSON.stringify(payload.value)}`;
     case 'unknown':
       return `not inspected (${payload.reason}), ${formatCount(payload.size)} bytes`;
   }

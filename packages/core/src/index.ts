@@ -61,6 +61,7 @@ export type { Clock, Timer } from './domain/clock.js';
 export {
   classifyPayload,
   classifyWithValue,
+  runDecoders,
   countNodes,
   decodeUtf8,
   DEFAULT_HEX_PREVIEW_BYTES,
@@ -82,6 +83,10 @@ export {
 } from './payload/index.js';
 export type {
   ClassifiedPayload,
+  DecodeContext,
+  DecodeOutcome,
+  DecodeResult,
+  PayloadDecoder,
   ClassifyOptions,
   JsonLimits,
   JsonObject,

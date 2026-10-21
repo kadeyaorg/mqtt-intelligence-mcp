@@ -44,3 +44,6 @@ export type {
   SchemaTypeCounts,
   SchemaTypeName,
 } from './schema.js';
+
+export { runDecoders } from './decoder.js';
+export type { DecodeContext, DecodeOutcome, DecodeResult, PayloadDecoder } from './decoder.js';

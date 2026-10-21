@@ -12,6 +12,8 @@
 import { createHash } from 'node:crypto';
 import type { PayloadClassification, UninspectedReason } from './classify.js';
 import { classifyPayload, decodeUtf8 } from './classify.js';
+import type { PayloadDecoder } from './decoder.js';
+import { runDecoders } from './decoder.js';
 import type { JsonLimits, JsonValue } from './json.js';
 import { limitJson } from './json.js';
 
@@ -34,9 +36,27 @@ export type PayloadView =
       readonly sha256?: string;
       readonly truncated: boolean;
     }
+  | {
+      readonly kind: 'decoded';
+      /** Which decoder read it. A reader must never take decoded bytes for JSON. */
+      readonly decoder: string;
+      readonly value: JsonValue;
+      readonly truncated: boolean;
+      readonly redactedKeys: number;
+    }
   | { readonly kind: 'unknown'; readonly size: number; readonly reason: UninspectedReason };
 
 export interface PayloadViewOptions {
+  /**
+   * Decoders to re-run when the classification says a decoder read these bytes.
+   *
+   * The store keeps bytes, never a decoded object graph — one would hold the whole structure
+   * alive for as long as the message is kept. So a decoded payload is rebuilt here, exactly
+   * as a JSON one is re-parsed.
+   */
+  readonly decoders?: readonly PayloadDecoder[];
+  /** The topic, which many formats key their meaning off. */
+  readonly topic?: string;
   /** Reuses a classification computed at ingest instead of redoing the work. */
   readonly classification?: PayloadClassification;
   readonly maxInspectBytes?: number;
@@ -104,6 +124,38 @@ export function toPayloadView(bytes: Uint8Array, options: PayloadViewOptions = {
 
   if (classification.kind === 'empty') {
     return { kind: 'empty' };
+  }
+  if (classification.kind === 'decoded') {
+    const outcome = runDecoders(
+      bytes,
+      { topic: options.topic ?? '' },
+      options.decoders ?? [],
+    ).outcome;
+    if (outcome !== undefined) {
+      // Bounded and redacted exactly like JSON: a decoder's output is still device data, and
+      // a Sparkplug payload can carry a credential as easily as a JSON one.
+      const limited = limitJson(outcome.value, {
+        ...(options.jsonLimits === undefined ? {} : { limits: options.jsonLimits }),
+        redactKeys: new Set([...(options.redactKeys ?? [])].map((key) => key.toLowerCase())),
+      });
+      return {
+        kind: 'decoded',
+        decoder: outcome.decoder,
+        value: limited.value,
+        truncated: limited.truncated || truncated,
+        redactedKeys: limited.redactedKeys,
+      };
+    }
+    // The decoder that read these bytes at ingest no longer does: it was removed from the
+    // configuration, or the stored bytes are a prefix it cannot parse. Falling back to the
+    // bytes beats inventing a value.
+    return {
+      kind: 'binary',
+      size,
+      hexPreview: toHexPreview(bytes, previewBytes),
+      truncated,
+      ...(truncated ? {} : { sha256: createHash('sha256').update(bytes).digest('hex') }),
+    };
   }
   if (classification.kind === 'unknown') {
     return { kind: 'unknown', size, reason: classification.reason ?? 'not-inspected' };

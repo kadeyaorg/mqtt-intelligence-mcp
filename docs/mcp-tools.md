@@ -213,6 +213,12 @@ Payloads are classified before they are rendered — JSON, text, number, boolean
 not-inspected — then truncated, escaped and redacted. Binary is never dumped: you get a size, a
 short hex preview and a digest ([ADR-0010](adr/0010-payload-classification-and-safe-views.md)).
 
+A **decoder** can read what the classifier cannot. None ship with this server — Sparkplug B,
+protobuf and CBOR each carry a dependency or a specification of their own — but one can be
+registered when embedding the engine, and anything it reads is bounded, redacted and given a
+shape exactly like JSON. The answer always names the decoder, because a reader who takes
+decoded bytes for JSON will write a consumer that breaks on the real wire format.
+
 ## Errors
 
 A refusal comes back as a tool result with `isError: true`, a stable code and a hint — not as a
