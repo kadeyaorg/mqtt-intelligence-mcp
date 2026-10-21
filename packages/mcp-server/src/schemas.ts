@@ -83,6 +83,13 @@ export const payloadViewSchema = z.union([
     sha256: z.string().optional(),
     truncated: z.boolean(),
   }),
+  z.object({
+    kind: z.literal('decoded'),
+    decoder: z.string(),
+    value: z.json(),
+    truncated: z.boolean(),
+    redactedKeys: z.number(),
+  }),
   z.object({ kind: z.literal('unknown'), size: z.number(), reason: z.string() }),
 ]);
 

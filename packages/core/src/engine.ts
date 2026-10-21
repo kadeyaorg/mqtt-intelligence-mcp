@@ -26,6 +26,7 @@ import { DiscoveryService } from './discovery/index.js';
 import { IngestPipeline } from './ingest/index.js';
 import type { Logger, MetricsRecorder } from './observability/index.js';
 import { createLogger, noopMetrics } from './observability/index.js';
+import type { PayloadDecoder } from './payload/index.js';
 import type { JsonValue, PayloadViewOptions, SchemaChange, SchemaField } from './payload/index.js';
 import { EMPTY_SCHEMA, flattenSchema, schemaChanges, toJsonSchema } from './payload/index.js';
 import { createReadPolicy } from './policy/index.js';
@@ -60,6 +61,13 @@ export interface EngineDependencies {
   readonly logger?: Logger;
   readonly metrics?: MetricsRecorder;
   readonly transportFactory?: TransportFactory;
+  /**
+   * Decoders offered any payload the classifier could only call binary, in order.
+   *
+   * None ship with the core: Sparkplug B, protobuf and CBOR each carry a dependency or a
+   * specification of their own, and the engine stays format-agnostic.
+   */
+  readonly decoders?: readonly PayloadDecoder[];
   readonly catalog?: TopicCatalog;
   readonly messageStore?: MessageStore;
 }
@@ -218,6 +226,7 @@ class EngineImplementation implements Engine {
   readonly #messageStore: MessageStore;
   readonly #registry: BrokerRegistry;
   readonly #runtimes = new Map<BrokerId, BrokerRuntime>();
+  readonly #decoders: readonly PayloadDecoder[];
   #closed = false;
 
   constructor(config: EngineConfig, dependencies: EngineDependencies = {}) {
@@ -246,6 +255,7 @@ class EngineImplementation implements Engine {
         maxLimit: config.mcp.maxResultItems,
       });
 
+    this.#decoders = dependencies.decoders ?? [];
     const metrics = dependencies.metrics ?? noopMetrics;
     const transportFactory = dependencies.transportFactory ?? new MqttJsTransportFactory();
 
@@ -276,6 +286,7 @@ class EngineImplementation implements Engine {
         clock: this.#clock,
         logger: this.#logger,
         metrics,
+        ...(this.#decoders.length === 0 ? {} : { decoders: this.#decoders }),
         limits: {
           maxInspectBytes: config.limits.maxInspectBytes,
           maxStoredPayloadBytes: config.limits.maxStoredPayloadBytes,
@@ -467,7 +478,7 @@ class EngineImplementation implements Engine {
     const related = await relatedTopics(this.#catalog, runtime.config.id, request.topic);
 
     return {
-      facts: toTopicFacts(record, lastMessage, this.#viewOptions()),
+      facts: toTopicFacts(record, lastMessage, this.#viewOptions(request.topic)),
       observations: {
         ...toTopicObservations(record, now),
         ...(related.length === 0 ? {} : { related }),
@@ -524,7 +535,7 @@ class EngineImplementation implements Engine {
       runtime.config.id,
       request.topic,
       limit,
-      this.#viewOptions(),
+      this.#viewOptions(request.topic),
     );
     const coverage = await runtime.discovery.coverage();
     const limitations: Limitation[] = [
@@ -542,11 +553,13 @@ class EngineImplementation implements Engine {
     };
   }
 
-  #viewOptions(): PayloadViewOptions {
+  #viewOptions(topic?: TopicName): PayloadViewOptions {
     return {
       maxInspectBytes: this.#config.limits.maxInspectBytes,
       maxTextChars: this.#config.mcp.maxPayloadPreviewChars,
       redactKeys: this.#config.security.redaction.jsonKeys,
+      ...(this.#decoders.length === 0 ? {} : { decoders: this.#decoders }),
+      ...(topic === undefined ? {} : { topic }),
     };
   }
 

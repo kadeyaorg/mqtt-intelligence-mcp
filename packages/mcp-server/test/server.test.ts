@@ -5,7 +5,7 @@
  * `tools/call`, because that is what a client does, and because the tool names, schemas and
  * annotations are a public API that prompts depend on (ADR-0012).
  */
-import type { Engine } from '@kadeya/mqtt-intel-core';
+import type { Engine, JsonValue, PayloadDecoder } from '@kadeya/mqtt-intel-core';
 import { createEngine, parseConfigDocument, resolveConfig } from '@kadeya/mqtt-intel-core';
 import { FakeClock, FakeTransportFactory } from '@kadeya/mqtt-intel-core/testing';
 import { Client } from '@modelcontextprotocol/client';
@@ -669,5 +669,113 @@ describe('the neighbours of a topic', () => {
     const text = textOf(await call(instance.client, 'mqtt_describe_topic', { topic: 'alone' }));
 
     expect(text).not.toContain('related topics');
+  });
+});
+
+describe('a payload only a decoder can read', () => {
+  /** A framed format, as Sparkplug or protobuf would be: binary to the classifier. */
+  const sparkplugish: PayloadDecoder = {
+    name: 'sparkplug-ish',
+    decode(payload: Uint8Array): JsonValue | undefined {
+      return payload[0] === 0x7f
+        ? { metric: 'torque', value: payload[1] ?? 0, apiKey: 'not-a-real-secret' }
+        : undefined;
+    },
+  };
+
+  async function withDecoder(): Promise<Harness> {
+    const clock = new FakeClock();
+    const transports = new FakeTransportFactory();
+    const config = await resolveConfig(
+      parseConfigDocument({
+        version: 1,
+        brokers: { 'factory-fr': { url: 'mqtt://localhost:1883' } },
+        logging: { level: 'error' },
+      }),
+      { env: {} },
+    );
+    const engine = createEngine(config, {
+      clock,
+      transportFactory: transports,
+      decoders: [sparkplugish],
+    });
+    const server = createMcpServer(engine);
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    const client = new Client({ name: 'decoder-test', version: '1.0.0' });
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    const instance: Harness = {
+      client,
+      engine,
+      clock,
+      transports,
+      async close(): Promise<void> {
+        await client.close();
+        await engine.close();
+      },
+    };
+    started.push(instance);
+    return instance;
+  }
+
+  it('reads it, names the decoder, and redacts it like any other payload', async () => {
+    const instance = await withDecoder();
+    await instance.engine.start();
+    instance.transports.last.deliver({
+      topic: 'factory/line-01/robot/metrics',
+      payload: new Uint8Array([0x7f, 118]),
+    });
+    await instance.clock.advance(200);
+
+    const text = textOf(
+      await call(instance.client, 'mqtt_get_recent_messages', {
+        topic: 'factory/line-01/robot/metrics',
+      }),
+    );
+
+    expect(text).toContain('decoded by sparkplug-ish');
+    expect(text).toContain('"value":118');
+    // Device data is device data, whatever framed it.
+    expect(text).not.toContain('not-a-real-secret');
+    expect(text).toContain('[REDACTED]');
+  });
+
+  it('gives a decoded topic a shape, like any other', async () => {
+    const instance = await withDecoder();
+    await instance.engine.start();
+    for (const value of [10, 20, 30]) {
+      instance.transports.last.deliver({
+        topic: 'factory/line-01/robot/metrics',
+        payload: new Uint8Array([0x7f, value]),
+      });
+      await instance.clock.advance(200);
+    }
+
+    const text = textOf(
+      await call(instance.client, 'mqtt_infer_schema', {
+        topic: 'factory/line-01/robot/metrics',
+      }),
+    );
+
+    expect(text).toContain('metric: string — always');
+    expect(text).toContain('value: number — always');
+  });
+
+  it('leaves a payload no decoder claims as binary, never as a guess', async () => {
+    const instance = await withDecoder();
+    await instance.engine.start();
+    instance.transports.last.deliver({
+      topic: 'factory/line-01/camera/frame',
+      payload: new Uint8Array([0x01, 0x02, 0x03, 0x04]),
+    });
+    await instance.clock.advance(200);
+
+    const text = textOf(
+      await call(instance.client, 'mqtt_get_recent_messages', {
+        topic: 'factory/line-01/camera/frame',
+      }),
+    );
+
+    expect(text).toContain('binary');
+    expect(text).not.toContain('decoded by');
   });
 });

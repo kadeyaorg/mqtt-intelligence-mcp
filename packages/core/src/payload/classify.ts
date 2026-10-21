@@ -13,7 +13,16 @@
 
 import type { JsonValue } from './json.js';
 
-export type PayloadKind = 'empty' | 'json' | 'number' | 'boolean' | 'text' | 'binary' | 'unknown';
+export type PayloadKind =
+  | 'empty'
+  | 'json'
+  | 'number'
+  | 'boolean'
+  | 'text'
+  | 'binary'
+  /** Read by a registered decoder rather than by the classifier. */
+  | 'decoded'
+  | 'unknown';
 
 export type JsonType = 'object' | 'array' | 'string' | 'number' | 'boolean' | 'null';
 
@@ -24,6 +33,8 @@ export interface PayloadClassification {
   readonly kind: PayloadKind;
   /** Set for `json`: what the top-level value is. */
   readonly jsonType?: JsonType;
+  /** Set for `decoded`: which decoder read it, so nothing pretends the bytes were JSON. */
+  readonly decodedBy?: string;
   readonly reason?: UninspectedReason;
 }
 
