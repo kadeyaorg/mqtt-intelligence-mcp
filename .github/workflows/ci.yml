@@ -43,6 +43,16 @@ jobs:
         # 2026-10-28; 24 and 22 are in maintenance. Remove 22 at its end of life
         # (2027-04-30), then 24 (2028-04-30).
         node: [22, 24, 26]
+        exclude:
+          # macOS runners are the scarcest, and one that is never allocated fails the
+          # aggregate for reasons that have nothing to do with the code — it happened on
+          # main on 2026-10-21. What macOS proves is that the code runs on macOS; which
+          # Node line it runs on is proved three times over on Linux and Windows. So macOS
+          # keeps the active LTS only.
+          - os: macos-latest
+            node: 22
+          - os: macos-latest
+            node: 24
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
