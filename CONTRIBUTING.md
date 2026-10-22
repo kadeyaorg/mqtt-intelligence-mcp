@@ -13,7 +13,7 @@ Small fixes, documentation and tests need no preamble.
 
 ## Getting set up
 
-Node.js 22 (≥ 22.13) or 24. Only LTS lines are supported
+Node.js 22 (≥ 22.13), 24 or 26. Only LTS lines are supported
 ([ADR-0001](docs/adr/0001-typescript-on-node-lts.md)); `.nvmrc` pins the one CI uses.
 
 ```bash

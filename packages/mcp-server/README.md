@@ -55,4 +55,4 @@ The engine behind it is published separately as
 [`@kadeya/mqtt-intel-core`](https://www.npmjs.com/package/@kadeya/mqtt-intel-core), with no MCP
 dependency.
 
-Apache-2.0 · Node.js 22 (≥ 22.12) or 24
+Apache-2.0 · Node.js 22 (≥ 22.12), 24 or 26

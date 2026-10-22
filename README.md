@@ -289,7 +289,7 @@ a reusable library.
 
 ## Contributing
 
-Requirements: Node.js 22 (≥ 22.13) or 24 — LTS lines only
+Requirements: Node.js 22 (≥ 22.13), 24 or 26 — LTS lines only
 ([ADR-0001](docs/adr/0001-typescript-on-node-lts.md)).
 
 ```bash

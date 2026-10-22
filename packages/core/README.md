@@ -55,4 +55,4 @@ const engine = createEngine(config, {
 The MCP server built on this is
 [`@kadeya/mqtt-intel-mcp`](https://www.npmjs.com/package/@kadeya/mqtt-intel-mcp).
 
-Apache-2.0 · Node.js 22 (≥ 22.12) or 24
+Apache-2.0 · Node.js 22 (≥ 22.12), 24 or 26
