@@ -50,6 +50,13 @@ export default defineConfig({
         },
       },
     ],
+    // Unit projects run on fake clocks and in-memory transports: nothing here measures
+    // elapsed time, so a per-test timeout only ever measures the runner. The default 5s is
+    // not enough on a loaded Windows runner, where the first test to touch a chunk of the
+    // module graph pays for all of it — `lists brokers with their state and coverage` took
+    // 5515ms on windows-latest / Node 22 on 2026-10-23 and 18ms locally on the same commit.
+    // 15s is still far below anything a genuine hang would survive.
+    testTimeout: 15_000,
     coverage: {
       provider: 'v8',
       // Projects have their own roots, so the pattern must not assume the workspace one.
