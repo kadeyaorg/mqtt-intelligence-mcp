@@ -91,8 +91,8 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Refuse to publish a package still marked private
-        # Both packages stay private until the npm organisation is confirmed (ADR-0002). This
-        # turns "npm quietly published nothing" into a failure that says why.
+        # Both packages stay private until the pull request that releases them flips the flag
+        # (ADR-0002). This turns "npm quietly published nothing" into a failure that says why.
         run: |
           set -euo pipefail
           for manifest in packages/*/package.json; do
@@ -101,6 +101,31 @@ jobs:
               exit 1
             fi
           done
+
+      - name: Refuse to publish provenance from a private repository
+        # npm verifies the attestation against the source repository and rejects one that
+        # points at a private repo — with a 422, after the tarball has been uploaded. That is
+        # a release that failed halfway rather than one that was refused, so it is worth one
+        # API call to get the same answer before anything leaves the runner.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          wants_provenance=false
+          for manifest in packages/*/package.json; do
+            if [ "$(node -p "require('./$manifest').publishConfig?.provenance === true")" = "true" ]; then
+              wants_provenance=true
+            fi
+          done
+          if [ "$wants_provenance" = "false" ]; then
+            echo "No package requests provenance: repository visibility does not matter." >&2
+            exit 0
+          fi
+          if [ "$(gh repo view --json isPrivate --jq .isPrivate)" = "true" ]; then
+            echo "This repository is private and the packages request npm provenance." >&2
+            echo "Make it public, or set publishConfig.provenance to false in both packages." >&2
+            exit 1
+          fi
 
       - name: Refuse to publish an unreleased version
         run: |
