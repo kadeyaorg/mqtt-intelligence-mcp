@@ -106,6 +106,17 @@ has to hold two unrelated changes in their head reviews neither of them well.
 Say in the description what you decided and what you rejected, and how you verified it. If
 you found something surprising on the way, that is usually the most valuable paragraph.
 
+`main` is protected by a repository ruleset, kept in
+[`.github/rulesets/main.json`](.github/rulesets/main.json) so that changing it is reviewable
+like anything else: no direct pushes, no force-pushes, no deleting the branch, linear history,
+squash as the only merge method, every conversation resolved, and **CI success** green. That
+last one is a single aggregate job that waits on the blocking ones, so the required check does
+not have to be renamed every time the test matrix changes.
+
+No approving review is required. This is a small project, and a rule nobody can satisfy is a
+rule that gets bypassed — the ruleset is there to stop accidents, not to stand in for a
+reviewer.
+
 ## Security
 
 Do not open a public issue for a vulnerability. [SECURITY.md](SECURITY.md) says where to send
