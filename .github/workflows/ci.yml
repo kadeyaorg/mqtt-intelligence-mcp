@@ -39,9 +39,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        # Supported Node.js LTS lines only (ADR-0001). 26 became the active LTS on
-        # 2026-10-28; 24 and 22 are in maintenance. Remove 22 at its end of life
-        # (2027-04-30), then 24 (2028-04-30).
+        # Supported Node.js LTS lines only (ADR-0001). 26 becomes the active LTS on
+        # 2026-10-28 and is promoted here a few days early, on purpose: the first release
+        # goes out before that date and should not advertise less than it supports. The
+        # deviation makes this gate stricter rather than looser, and it expires by itself.
+        # 24 and 22 are in maintenance. Remove 22 at its end of life (2027-04-30), then 24
+        # (2028-04-30).
         node: [22, 24, 26]
         exclude:
           # macOS runners are the scarcest, and one that is never allocated fails the
@@ -109,6 +112,6 @@ jobs:
   # There is no experimental job at present, and that is not an oversight.
   #
   # It watched the current, not-yet-LTS line for early warnings (ADR-0001). Node moved to one
-  # major release a year from version 27: its alpha opened on 2026-10-28, it ships in April
+  # major release a year from version 27: its alpha opens on 2026-10-28, it ships in April
   # 2027 and enters LTS in October 2027. Until it ships there is no current line to watch, so
   # the job comes back in April 2027 pointing at 27.
