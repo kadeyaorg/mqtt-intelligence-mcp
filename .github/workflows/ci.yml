@@ -23,7 +23,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
+          node-version: 26
           cache: npm
       - run: npm ci
       - run: npm run build
@@ -39,9 +39,23 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        # Supported Node.js LTS lines only (ADR-0001).
-        # Add 26 when it enters LTS (2026-10-28). Remove 22 at its end of life (2027-04-30).
-        node: [22, 24]
+        # Supported Node.js LTS lines only (ADR-0001). 26 becomes the active LTS on
+        # 2026-10-28 and is promoted here a few days early, on purpose: the first release
+        # goes out before that date and should not advertise less than it supports. The
+        # deviation makes this gate stricter rather than looser, and it expires by itself.
+        # 24 and 22 are in maintenance. Remove 22 at its end of life (2027-04-30), then 24
+        # (2028-04-30).
+        node: [22, 24, 26]
+        exclude:
+          # macOS runners are the scarcest, and one that is never allocated fails the
+          # aggregate for reasons that have nothing to do with the code — it happened on
+          # main on 2026-10-21. What macOS proves is that the code runs on macOS; which
+          # Node line it runs on is proved three times over on Linux and Windows. So macOS
+          # keeps the active LTS only.
+          - os: macos-latest
+            node: 22
+          - os: macos-latest
+            node: 24
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -64,7 +78,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [22, 24]
+        node: [22, 24, 26]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -95,25 +109,9 @@ jobs:
             && [ "${{ needs.test.result }}" = "success" ] \
             && [ "${{ needs.integration.result }}" = "success" ]
 
-  test-experimental:
-    # Early warning on the current, not-yet-LTS Node.js line. Non-blocking, not advertised as
-    # supported (ADR-0001).
-    name: Test (experimental, Node ${{ matrix.node }})
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    continue-on-error: true
-    strategy:
-      fail-fast: false
-      matrix:
-        node: [26]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: ${{ matrix.node }}
-          cache: npm
-      - run: npm ci
-      - run: npm run build
-      - run: npm test
+  # There is no experimental job at present, and that is not an oversight.
+  #
+  # It watched the current, not-yet-LTS line for early warnings (ADR-0001). Node moved to one
+  # major release a year from version 27: its alpha opens on 2026-10-28, it ships in April
+  # 2027 and enters LTS in October 2027. Until it ships there is no current line to watch, so
+  # the job comes back in April 2027 pointing at 27.
