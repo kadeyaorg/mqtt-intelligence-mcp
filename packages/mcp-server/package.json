@@ -1,7 +1,7 @@
 {
   "name": "@kadeya/mqtt-intel-mcp",
   "version": "0.0.0",
-  "private": true,
+  "private": false,
   "description": "MCP server giving AI agents safe, structured and observable, read-only-by-default access to MQTT infrastructures.",
   "license": "Apache-2.0",
   "publishConfig": {

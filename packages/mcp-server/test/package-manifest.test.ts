@@ -40,10 +40,22 @@ describe('mcp-server package manifest', () => {
     expect(dependencyNames(manifest, 'dependencies')).not.toContain('mqtt');
   });
 
-  it('cannot be published before the npm organisation is confirmed (ADR-0002)', async () => {
+  it('is publishable, and ships only what it declares (ADR-0002)', async () => {
     const manifest = await readManifest();
 
-    expect(manifest['private']).toBe(true);
+    // The safety catch came off for the first release. What stands in its place is the
+    // allowlist: an opt-in `files` list cannot quietly start shipping a stray file because
+    // somebody dropped one next to the sources. `src` is deliberate — the source maps point
+    // at it, and a reader should be able to follow them.
+    expect(manifest['private']).toBe(false);
+    expect(manifest['files']).toEqual([
+      'dist',
+      'src',
+      '!**/*.tsbuildinfo',
+      'LICENSE',
+      'NOTICE',
+      'CHANGELOG.md',
+    ]);
   });
 });
 
