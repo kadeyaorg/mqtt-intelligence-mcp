@@ -50,6 +50,11 @@ jobs:
           fi
 
       - name: Bump versions and write the changelogs
+        # The changelog generator is @changesets/changelog-github: it asks the GitHub API which
+        # pull request and which author each changeset came from, so it needs a token and
+        # fails outright without one. Nothing in this step pushes anything.
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: npm run version
 
       - name: Open the release pull request
