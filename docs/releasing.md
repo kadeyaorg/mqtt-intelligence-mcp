@@ -5,24 +5,26 @@ a pull request: a release is a decision, and it is taken by a person, in the Act
 
 ## Before the first release
 
-The `@kadeya` organisation exists on npm. Three things are still open, and the first release
-cannot happen without them.
+The `@kadeya` organisation exists on npm, the repository is public, and both packages are out
+of their `"private": true` safety catch. **One thing is still open.**
 
-1. **The repository must be public.** npm refuses a provenance attestation that points at a
-   private source repository, and it refuses it with a 422 _after_ the tarball has been
-   uploaded — a failed release rather than a clean refusal. Going public is on the plan
-   anyway: it is what branch protection and CodeQL are waiting for too. The alternative is to
-   set `publishConfig.provenance` to `false` in both packages and release without the badge.
-2. **The first publish needs a token, and only the first.** A trusted publisher is configured
-   per package, and npm cannot configure one for a package that does not exist yet. So:
-   create a granular access token scoped to `@kadeya/*` with the shortest expiry npm offers,
-   store it as the `NPM_TOKEN` repository secret, run the release, then **revoke the token and
-   delete the secret**. From the second release on, see
-   [Trusted publishing](#trusted-publishing).
-3. **Both packages carry `"private": true`.** That is deliberate — nothing can be published by
-   accident — and it is flipped to `false` in both manifests in the same pull request as the
-   first release. The workflow refuses to publish while either is private and says which one,
-   and `tools/packaging/manifests.test.js` refuses a flip that touches only one of them.
+**The first publish needs a token, and only the first.** A trusted publisher is configured per
+package, and npm cannot configure one for a package that does not exist yet. So: create a
+granular access token scoped to `@kadeya/*` with the shortest expiry npm offers, store it as
+the `NPM_TOKEN` repository secret, run the release, then **revoke the token and delete the
+secret**. From the second release on, see [Trusted publishing](#trusted-publishing).
+
+Two things that are no longer open, because the release depends on them staying that way:
+
+- **The repository is public.** npm refuses a provenance attestation that points at a private
+  source repository, and it refuses it with a 422 _after_ the tarball has been uploaded — a
+  failed release rather than a clean refusal. The publish job asks the API before anything
+  leaves the runner, so turning the repository private again fails the release early and says
+  so. The alternative then is `publishConfig.provenance: false` in both packages, and no badge.
+- **Both packages are publishable.** `"private": true` was the catch that made an accidental
+  publish impossible; the pull request that opened the registry removed it from both at once.
+  `tools/packaging/manifests.test.js` refuses a change that touches only one of them, because
+  one published package whose peer is still private is a package nobody can install.
 
 The scope was chosen in [ADR-0002](adr/0002-monorepo-with-two-packages.md), where it is marked
 provisional.
