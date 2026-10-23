@@ -140,7 +140,7 @@ engine only reports what it observed.
 
 | Capability                                                                  | Status |
 | --------------------------------------------------------------------------- | ------ |
-| Six read-only MCP tools, no publish path at all                             | V0.1   |
+| Read-only MCP tools, no publish path at all                                 | V0.1   |
 | Multi-broker: MQTT 3.1.1 and 5, TLS, mutual TLS, WebSockets                 | V0.1   |
 | Passive discovery, bounded topic catalogue, per-topic statistics            | V0.1   |
 | Topic tree, search by filter, substring, activity or silence                | V0.1   |
@@ -153,12 +153,12 @@ engine only reports what it observed.
 | Guarded publishing, off unless enabled                                      | V0.4   |
 | OpenTelemetry, persistent storage, HTTP transport with authentication       | V0.4+  |
 
-The six tools, with their inputs and errors: [docs/mcp-tools.md](docs/mcp-tools.md).
+The tools, with their inputs and errors: [docs/mcp-tools.md](docs/mcp-tools.md).
 
 ### A skill for the agent using them
 
 [`skills/mqtt-investigation`](skills/mqtt-investigation/README.md) teaches an agent **how** to
-use the six tools rather than what they do: the order to call them in, how to read the
+use the tools rather than what they do: the order to call them in, how to read the
 limitations, when the server is the wrong instrument and a raw capture is the right one, and
 the traps that have cost real time against real machines. It bundles the capture script those
 investigations kept needing.
@@ -216,7 +216,7 @@ topics — so namespace discovery is not possible there.
 ```text
 AI agent (MCP client)
         │  stdio
-   @kadeya/mqtt-intel-mcp     six tools · schemas · rendering · CLI
+   @kadeya/mqtt-intel-mcp     MCP tools · schemas · rendering · CLI
         │  Engine
    @kadeya/mqtt-intel-core    policy · discovery · ingest · catalogue · payloads
         │  ports

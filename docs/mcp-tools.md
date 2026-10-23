@@ -1,4 +1,4 @@
-# The six tools
+# The MCP tools
 
 Seven, not seventeen. Every tool definition costs room in the agent's context and dilutes its
 choice between them, so each one here answers a question a person actually asks: what is out

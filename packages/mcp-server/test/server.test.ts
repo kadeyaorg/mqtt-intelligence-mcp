@@ -5,6 +5,8 @@
  * `tools/call`, because that is what a client does, and because the tool names, schemas and
  * annotations are a public API that prompts depend on (ADR-0012).
  */
+import { readFile } from 'node:fs/promises';
+
 import type { Engine, JsonValue, PayloadDecoder } from '@kadeya/mqtt-intel-core';
 import { createEngine, parseConfigDocument, resolveConfig } from '@kadeya/mqtt-intel-core';
 import { FakeClock, FakeTransportFactory } from '@kadeya/mqtt-intel-core/testing';
@@ -81,6 +83,25 @@ function textOf(result: ToolResult): string {
 }
 
 describe('the tool surface', () => {
+  // Every document that tells a reader — or an agent — which tools exist. A tool added
+  // without touching these is a tool nobody can find: `mqtt_infer_schema` shipped in #34 and
+  // was missing from all three until the first release was about to go out with them.
+  const INVENTORIES = [
+    'docs/mcp-tools.md',
+    'packages/mcp-server/README.md',
+    'skills/mqtt-investigation/SKILL.md',
+  ];
+
+  it.each(INVENTORIES)('is listed in full by %s', async (document) => {
+    const { client } = await harness();
+    const listed = await client.listTools();
+    const text = await readFile(new URL(`../../../${document}`, import.meta.url), 'utf8');
+
+    const missing = listed.tools.map((tool) => tool.name).filter((name) => !text.includes(name));
+
+    expect(missing).toEqual([]);
+  });
+
   it('exposes exactly seven tools, all read-only', async () => {
     const { client } = await harness();
 

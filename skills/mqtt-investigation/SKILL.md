@@ -5,7 +5,7 @@ description: How to investigate an MQTT namespace with the MQTT Intelligence MCP
 
 # Investigating an MQTT namespace
 
-You have six read-only tools over one or more brokers. They cannot publish: there is no
+You have seven read-only tools over one or more brokers. They cannot publish: there is no
 publish path in this server, so nothing you do here can move a machine.
 
 | Tool                       | Answers                                           |
@@ -16,6 +16,7 @@ publish path in this server, so nothing you do here can move a machine.
 | `mqtt_search_topics`       | Where something is, what is busiest, what stopped |
 | `mqtt_describe_topic`      | Everything known about one topic                  |
 | `mqtt_get_recent_messages` | What it last said                                 |
+| `mqtt_infer_schema`        | What its payloads look like, as a schema          |
 
 ## The one rule everything else serves
 
@@ -55,7 +56,14 @@ and the second one is where crashed nodes show up.
 block, not just the last payload — the rate, the mean interval, its standard deviation, and
 how long it has been silent relative to its own habit.
 
-**5. `mqtt_get_recent_messages`** when you need the actual values over time, not the summary.
+**5. `mqtt_infer_schema`** when the payloads are JSON and you need their structure rather
+than one example: which fields are always present, which are optional, which carry more than
+one type, and when each was first and last seen. A field that stopped appearing and one that
+started at the same moment is what a rename looks like from here — two dated facts, not a
+rename. Two unrelated changes look identical from arrival times, and only someone who knows
+the firmware can tell which it was.
+
+**6. `mqtt_get_recent_messages`** when you need the actual values over time, not the summary.
 
 Do not start at rung 4 because the person named a topic. A topic you describe in isolation
 tells you nothing about whether its behaviour is normal for that machine; one tree call gives
