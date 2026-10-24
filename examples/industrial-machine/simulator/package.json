@@ -12,6 +12,6 @@
     "start": "node src/main.ts"
   },
   "dependencies": {
-    "mqtt": "^5.16.0"
+    "mqtt": "^5.16.1"
   }
 }
