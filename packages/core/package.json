@@ -1,6 +1,6 @@
 {
   "name": "@kadeya/mqtt-intel-core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": false,
   "description": "MQTT Intelligence engine: bounded discovery, topic catalog and safe payload views for MQTT infrastructures. Independent from MCP.",
   "license": "Apache-2.0",
