@@ -5,10 +5,10 @@
  * them most — someone whose MCP client shows a server that failed to start — have only
  * stderr and an exit code to work with.
  */
-import { CONFIG_PATH_ENV, QUICK_START_ENV } from '@kadeya/mqtt-intel-core';
+import { CONFIG_PATH_ENV, QUICK_START_ENV } from '@kadeya/mqtt-intelligence-core';
 import { EXIT_CODES } from './exit-codes.js';
 
-export const BINARY_NAME = 'mqtt-intel-mcp';
+export const BINARY_NAME = 'mqtt-intelligence-mcp';
 
 /** Two aligned columns, so the names stay readable whatever their length. */
 function describe(rows: readonly (readonly [string, string])[]): readonly string[] {

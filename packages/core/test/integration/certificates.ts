@@ -99,11 +99,11 @@ async function generateKeyAndCertificate(
 
 /** Generates a CA, a server certificate and a client certificate, valid for one day. */
 export async function createTestCertificates(serverName = 'localhost'): Promise<TestCertificates> {
-  const directory = await mkdtemp(join(tmpdir(), 'mqtt-intel-tls-'));
-  await generateKeyAndCertificate(directory, 'ca', 'mqtt-intel-test-ca', undefined);
+  const directory = await mkdtemp(join(tmpdir(), 'mqtt-intelligence-tls-'));
+  await generateKeyAndCertificate(directory, 'ca', 'mqtt-intelligence-test-ca', undefined);
   const ca = { certificate: join(directory, 'ca.crt'), key: join(directory, 'ca.key') };
   await generateKeyAndCertificate(directory, 'server', serverName, ca);
-  await generateKeyAndCertificate(directory, 'client', 'mqtt-intel-test-client', ca);
+  await generateKeyAndCertificate(directory, 'client', 'mqtt-intelligence-test-client', ca);
 
   const read = async (name: string): Promise<Uint8Array> => readFile(join(directory, name));
 

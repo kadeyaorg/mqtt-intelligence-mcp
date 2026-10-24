@@ -27,7 +27,7 @@ before answering has said why.
 ## Claude Code
 
 ```bash
-claude mcp add mqtt-intelligence -- npx -y @kadeya/mqtt-intel-mcp --config /absolute/path/to/mqtt-intelligence.yaml
+claude mcp add mqtt-intelligence -- npx -y @kadeya/mqtt-intelligence-mcp --config /absolute/path/to/mqtt-intelligence.yaml
 ```
 
 Add `--scope project` to write it into the repository's `.mcp.json` for everyone, or
@@ -35,7 +35,7 @@ Add `--scope project` to write it into the repository's `.mcp.json` for everyone
 
 ## Before the package is published
 
-`@kadeya/mqtt-intel-mcp` is not on npm yet, so `npx` cannot fetch it. Until it is, build this
+`@kadeya/mqtt-intelligence-mcp` is not on npm yet, so `npx` cannot fetch it. Until it is, build this
 repository and point the client at the result:
 
 ```json
@@ -60,7 +60,7 @@ repository and point the client at the result:
 Point the CLI at the same file:
 
 ```bash
-npx @kadeya/mqtt-intel-mcp check --config /absolute/path/to/mqtt-intelligence.yaml
+npx @kadeya/mqtt-intelligence-mcp check --config /absolute/path/to/mqtt-intelligence.yaml
 ```
 
 It validates the file, connects every broker, subscribes the discovery filters and exits 0

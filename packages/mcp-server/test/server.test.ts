@@ -7,9 +7,9 @@
  */
 import { readFile } from 'node:fs/promises';
 
-import type { Engine, JsonValue, PayloadDecoder } from '@kadeya/mqtt-intel-core';
-import { createEngine, parseConfigDocument, resolveConfig } from '@kadeya/mqtt-intel-core';
-import { FakeClock, FakeTransportFactory } from '@kadeya/mqtt-intel-core/testing';
+import type { Engine, JsonValue, PayloadDecoder } from '@kadeya/mqtt-intelligence-core';
+import { createEngine, parseConfigDocument, resolveConfig } from '@kadeya/mqtt-intelligence-core';
+import { FakeClock, FakeTransportFactory } from '@kadeya/mqtt-intelligence-core/testing';
 import { Client } from '@modelcontextprotocol/client';
 import { InMemoryTransport } from '@modelcontextprotocol/server';
 import { afterEach, describe, expect, it } from 'vitest';

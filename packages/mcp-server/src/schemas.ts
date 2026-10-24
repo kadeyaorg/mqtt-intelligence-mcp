@@ -6,7 +6,7 @@
  * once and shared, rather than inlined per tool, so that "coverage" and "limitations" mean
  * exactly the same thing in every answer.
  */
-import { isBrokerId, isTopicFilter, isTopicName } from '@kadeya/mqtt-intel-core';
+import { isBrokerId, isTopicFilter, isTopicName } from '@kadeya/mqtt-intelligence-core';
 import * as z from 'zod';
 
 export const brokerIdSchema = z

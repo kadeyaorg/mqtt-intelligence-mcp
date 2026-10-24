@@ -27,7 +27,7 @@ body:
         run. If it only happens against your own broker, say which broker and version.
       placeholder: |
         1. docker compose -f examples/industrial-machine/docker-compose.yml up -d --wait
-        2. mqtt-intel-mcp check --config examples/industrial-machine/mqtt-intelligence.yaml
+        2. mqtt-intelligence-mcp check --config examples/industrial-machine/mqtt-intelligence.yaml
         3. …
     validations:
       required: true
@@ -49,7 +49,7 @@ body:
     id: versions
     attributes:
       label: Versions
-      description: Server version (`mqtt-intel-mcp --version`), Node.js (`node --version`), OS, broker and its version.
+      description: Server version (`mqtt-intelligence-mcp --version`), Node.js (`node --version`), OS, broker and its version.
       placeholder: 'server 0.1.0, Node 24.4.0, macOS 15, Mosquitto 2.0.22'
     validations:
       required: true

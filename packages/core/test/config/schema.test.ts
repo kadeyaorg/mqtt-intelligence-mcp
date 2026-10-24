@@ -38,7 +38,7 @@ describe('defaults', () => {
     expect(broker).toBeDefined();
     expect(broker?.protocolVersion).toBe(5);
     expect(broker?.connect).toBe('startup');
-    expect(broker?.clientId).toEqual({ prefix: 'mqtt-intel' });
+    expect(broker?.clientId).toEqual({ prefix: 'mqtt-observer' });
     expect(broker?.discovery).toEqual({
       enabled: true,
       filters: ['#'],

@@ -79,7 +79,7 @@ the workflow's own repository, which the packaging test checks, and a **public**
 ### 5. Afterwards
 
 - Check both packages on npm: the files list, the README, the provenance badge.
-- `npx @kadeya/mqtt-intel-mcp check --config examples/industrial-machine/mqtt-intelligence.yaml`
+- `npx @kadeya/mqtt-intelligence-mcp check --config examples/industrial-machine/mqtt-intelligence.yaml`
   against the example stack, from a directory that is not this repository. That is the quick
   start a new user runs, and it is the one thing the test suite cannot check.
 - Announce it where it is useful, not everywhere.

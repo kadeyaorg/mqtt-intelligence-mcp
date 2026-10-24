@@ -10,8 +10,8 @@
  * maps errors. It makes no security decision of its own — those all live in the engine, so
  * they hold whatever drives it (ADR-0003).
  */
-import type { Engine, Logger } from '@kadeya/mqtt-intel-core';
-import { noopLogger } from '@kadeya/mqtt-intel-core';
+import type { Engine, Logger } from '@kadeya/mqtt-intelligence-core';
+import { noopLogger } from '@kadeya/mqtt-intelligence-core';
 import type { CallToolResult } from '@modelcontextprotocol/server';
 import { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod';

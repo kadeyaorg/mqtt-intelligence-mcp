@@ -46,7 +46,7 @@ async function run(
 
 /** Writes a configuration file. JSON is valid YAML, so the document can stay inline. */
 async function writeConfig(document: unknown): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), 'mqtt-intel-cli-'));
+  const directory = await mkdtemp(join(tmpdir(), 'mqtt-intelligence-cli-'));
   directories.push(directory);
   const path = join(directory, 'config.yaml');
   await writeFile(path, JSON.stringify(document), 'utf8');

@@ -1,7 +1,7 @@
 # A broker and a fictional production line, in two containers.
 #
 #   docker compose up -d --wait
-#   npx @kadeya/mqtt-intel-mcp check --config examples/industrial-machine/mqtt-intelligence.yaml
+#   npx @kadeya/mqtt-intelligence-mcp check --config examples/industrial-machine/mqtt-intelligence.yaml
 #
 # Port 1883 is published on the host so the MCP server, which runs on the host next to your
 # MCP client, can reach it. If something already listens there, change the host side of the
@@ -9,7 +9,7 @@
 services:
   mosquitto:
     image: eclipse-mosquitto:2.0
-    container_name: mqtt-intel-example-broker
+    container_name: mqtt-intelligence-example-broker
     ports:
       # A machine that already runs a broker — many developers' do — can move the host side
       # with MQTT_EXAMPLE_HOST_PORT. Change the URL in mqtt-intelligence.yaml to match: a
@@ -29,7 +29,7 @@ services:
   simulator:
     build:
       context: ./simulator
-    container_name: mqtt-intel-example-simulator
+    container_name: mqtt-intelligence-example-simulator
     depends_on:
       mosquitto:
         condition: service_healthy

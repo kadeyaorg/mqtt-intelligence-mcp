@@ -9,7 +9,7 @@ node packages/mcp-server/dist/cli/bin.js check --config examples/industrial-mach
 ```
 
 (`npm install && npm run build` first; once the package is published this becomes
-`npx @kadeya/mqtt-intel-mcp check --config …`.)
+`npx @kadeya/mqtt-intelligence-mcp check --config …`.)
 
 `check` should print `connection: ok` and `subscribed to factory/#`, and exit 0. Then wire an
 MCP client to the same configuration file — see [../mcp-clients](../mcp-clients/README.md) —

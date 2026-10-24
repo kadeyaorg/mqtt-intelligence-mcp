@@ -11,7 +11,7 @@
 
 ## 2. In scope
 
-### Engine (`@kadeya/mqtt-intel-core`)
+### Engine (`@kadeya/mqtt-intelligence-core`)
 
 - [x] Configuration: YAML + zod, secret references (`env`, `file`), env-only quick start,
       unknown-key rejection, precise error messages.
@@ -34,7 +34,7 @@
 - [x] Typed errors with stable codes; sanitization.
 - [x] Logger (JSON on stderr, redaction) and metrics port (no-op default).
 
-### MCP server (`@kadeya/mqtt-intel-mcp`)
+### MCP server (`@kadeya/mqtt-intelligence-mcp`)
 
 - [x] SDK v2, stdio transport.
 - [x] Six tools: `mqtt_list_brokers`, `mqtt_discover_topics`, `mqtt_topic_tree`,
@@ -90,7 +90,7 @@
 
 ## 4. V0.1 acceptance criteria
 
-1. `npx @kadeya/mqtt-intel-mcp check` against the example stack succeeds in
+1. `npx @kadeya/mqtt-intelligence-mcp check` against the example stack succeeds in
    < 10 s on a laptop.
 2. From a clean machine with Docker and Node, the quick start (clone or `npx`, compose up,
    add MCP config) takes under five minutes by following the README only.

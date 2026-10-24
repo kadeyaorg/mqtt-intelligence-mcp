@@ -45,7 +45,7 @@ brokers:
     url: mqtt://staging.internal:1883
     connect: lazy
     clientId:
-      prefix: mqtt-intel-staging
+      prefix: mqtt-observer-staging
     discovery:
       filters:
         - '#'

@@ -54,7 +54,7 @@ brokers: # required, at least one
     protocolVersion: 5 # 5 = MQTT 5, 4 = MQTT 3.1.1
     connect: startup # or "lazy": connect on first use
     clientId:
-      prefix: mqtt-intel # a random suffix is added (default)
+      prefix: mqtt-observer # a random suffix is added (default)
       # fixed: my-reader             # opt-in: reusing an id disconnects whoever holds it
     auth:
       username: mcp-reader # not a secret; may be inline
@@ -164,7 +164,7 @@ regardless, which is the point of `check`.
 ## Checking it
 
 ```bash
-mqtt-intel-mcp check --config ./mqtt-intelligence.yaml
+mqtt-intelligence-mcp check --config ./mqtt-intelligence.yaml
 ```
 
 Validates the file, connects every broker, subscribes the discovery filters, and reports all of

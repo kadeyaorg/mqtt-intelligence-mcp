@@ -10,8 +10,13 @@
  * mistake in the configuration are different problems with different exit codes, and both
  * are reported before a single socket is opened.
  */
-import type { Engine, EngineConfig, Logger } from '@kadeya/mqtt-intel-core';
-import { createEngine, createLogger, loadConfig, sanitizeError } from '@kadeya/mqtt-intel-core';
+import type { Engine, EngineConfig, Logger } from '@kadeya/mqtt-intelligence-core';
+import {
+  createEngine,
+  createLogger,
+  loadConfig,
+  sanitizeError,
+} from '@kadeya/mqtt-intelligence-core';
 import { parseCliArgs } from './args.js';
 import { runCheck } from './check.js';
 import { closeWithDeadline } from './close.js';

@@ -18,7 +18,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "@kadeya/mqtt-intel-mcp",
+        "@kadeya/mqtt-intelligence-mcp",
         "--config",
         "${workspaceFolder}/mqtt-intelligence.yaml"
       ],

@@ -27,7 +27,7 @@ function connectionFor(broker: RunningMosquitto): BrokerConnectionOptions {
     transport: {
       url: broker.url,
       protocolVersion: 5,
-      clientId: `mqtt-intel-subs-${Math.random().toString(16).slice(2, 10)}`,
+      clientId: `mqtt-observer-subs-${Math.random().toString(16).slice(2, 10)}`,
       keepaliveSeconds: 5,
       connectTimeoutMs: 5000,
     },

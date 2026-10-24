@@ -7,16 +7,16 @@ boundaries, is the [architecture proposal](proposal/03-architecture.md).
 ```text
 AI agent (MCP client)
         │  stdio, JSON-RPC
-   @kadeya/mqtt-intel-mcp      MCP tools · schemas · rendering · CLI
+   @kadeya/mqtt-intelligence-mcp      MCP tools · schemas · rendering · CLI
         │  Engine
-   @kadeya/mqtt-intel-core     policy · discovery · ingest · catalogue · payloads
+   @kadeya/mqtt-intelligence-core     policy · discovery · ingest · catalogue · payloads
         │  ports
    MQTT brokers                via mqtt.js, behind a transport port
 ```
 
 ## Two packages, one of them not about MCP at all
 
-`@kadeya/mqtt-intel-core` is a plain TypeScript library. It has **no MCP dependency**, and a
+`@kadeya/mqtt-intelligence-core` is a plain TypeScript library. It has **no MCP dependency**, and a
 lint rule enforces that. MCP is one adapter over it; a CLI, an HTTP service or an embedding in
 someone else's program are others, and none of them would need the engine to change
 ([ADR-0003](adr/0003-core-independent-from-mcp.md)).
@@ -44,7 +44,7 @@ rejects a whole subscription batch when the broker refuses one filter, can leave
 promise unsettled forever, and starves its own keepalive if a message handler blocks. Each of
 those is handled once, where it belongs.
 
-The storage ports ship with a **contract test suite** in `@kadeya/mqtt-intel-core/testing`, so
+The storage ports ship with a **contract test suite** in `@kadeya/mqtt-intelligence-core/testing`, so
 a future SQLite store proves it behaves like the in-memory one rather than hoping it does
 ([ADR-0008](adr/0008-storage-ports.md)).
 

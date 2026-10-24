@@ -1,7 +1,7 @@
 # Configuration for the local example stack (docker-compose.yml).
 #
 # Point your MCP client at this file:
-#   mqtt-intel-mcp --config examples/industrial-machine/mqtt-intelligence.yaml
+#   mqtt-intelligence-mcp --config examples/industrial-machine/mqtt-intelligence.yaml
 version: 1
 
 brokers:

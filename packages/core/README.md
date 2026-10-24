@@ -1,4 +1,4 @@
-# @kadeya/mqtt-intel-core
+# @kadeya/mqtt-intelligence-core
 
 The engine behind [MQTT Intelligence MCP](https://github.com/kadeyaorg/mqtt-intelligence-mcp),
 as a library. **No MCP dependency**: this is the part that connects to brokers, watches a
@@ -6,7 +6,7 @@ namespace and answers questions about it, and it can back a CLI, a service or yo
 just as well as it backs an MCP server.
 
 ```ts
-import { createEngine, loadConfig } from '@kadeya/mqtt-intel-core';
+import { createEngine, loadConfig } from '@kadeya/mqtt-intelligence-core';
 
 const engine = createEngine(await loadConfig({ path: './mqtt-intelligence.yaml' }));
 await engine.start();
@@ -35,11 +35,11 @@ tell you one caused the other.
 ## Ports
 
 MQTT access, storage, time, logs and metrics all sit behind ports, each with a fake beside it.
-`@kadeya/mqtt-intel-core/testing` ships `FakeClock`, `FakeTransport`, a recording logger, an
+`@kadeya/mqtt-intelligence-core/testing` ships `FakeClock`, `FakeTransport`, a recording logger, an
 in-memory metrics recorder, and the **contract test suites** a storage adapter must pass.
 
 ```ts
-import { FakeClock, FakeTransportFactory } from '@kadeya/mqtt-intel-core/testing';
+import { FakeClock, FakeTransportFactory } from '@kadeya/mqtt-intelligence-core/testing';
 
 const engine = createEngine(config, {
   clock: new FakeClock(),
@@ -53,6 +53,6 @@ const engine = createEngine(config, {
 — configuration reference, security model, architecture and decision records.
 
 The MCP server built on this is
-[`@kadeya/mqtt-intel-mcp`](https://www.npmjs.com/package/@kadeya/mqtt-intel-mcp).
+[`@kadeya/mqtt-intelligence-mcp`](https://www.npmjs.com/package/@kadeya/mqtt-intelligence-mcp).
 
 Apache-2.0 · Node.js 22 (≥ 22.12), 24 or 26

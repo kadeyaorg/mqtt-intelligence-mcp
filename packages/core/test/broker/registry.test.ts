@@ -12,7 +12,7 @@ function brokerOptions(brokerId: typeof FACTORY, port: number): BrokerConnection
     transport: {
       url: `mqtt://localhost:${String(port)}`,
       protocolVersion: 5,
-      clientId: `mqtt-intel-${brokerId}`,
+      clientId: `mqtt-observer-${brokerId}`,
       keepaliveSeconds: 30,
       connectTimeoutMs: 5000,
     },

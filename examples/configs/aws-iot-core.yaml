@@ -16,7 +16,7 @@ brokers:
     # network means disconnecting a device. A fixed id is therefore opt-in; prefer a prefix
     # and let the server add a random suffix.
     clientId:
-      prefix: mqtt-intel
+      prefix: mqtt-observer
 
     tls:
       ca:
