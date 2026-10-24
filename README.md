@@ -10,7 +10,7 @@ observe** so the agent does not invent the rest.
 
 > **Status: V0.1, not yet published to npm.** Everything on this page works today from a
 > clone. The `@kadeya` npm organisation is not confirmed yet, so both packages are marked
-> private and `npx @kadeya/mqtt-intel-mcp` does not resolve. [Releasing](docs/releasing.md)
+> private and `npx @kadeya/mqtt-intelligence-mcp` does not resolve. [Releasing](docs/releasing.md)
 > says what is left.
 
 ---
@@ -216,9 +216,9 @@ topics — so namespace discovery is not possible there.
 ```text
 AI agent (MCP client)
         │  stdio
-   @kadeya/mqtt-intel-mcp     MCP tools · schemas · rendering · CLI
+   @kadeya/mqtt-intelligence-mcp     MCP tools · schemas · rendering · CLI
         │  Engine
-   @kadeya/mqtt-intel-core    policy · discovery · ingest · catalogue · payloads
+   @kadeya/mqtt-intelligence-core    policy · discovery · ingest · catalogue · payloads
         │  ports
    MQTT brokers
 ```
@@ -232,13 +232,13 @@ sit behind ports, each with a fake beside it.
 
 ## Repository layout
 
-| Path                  | Content                                                    |
-| --------------------- | ---------------------------------------------------------- |
-| `packages/core`       | `@kadeya/mqtt-intel-core`: the engine, as a library        |
-| `packages/mcp-server` | `@kadeya/mqtt-intel-mcp`: the MCP server and the CLI       |
-| `examples/`           | A fictional factory, five configurations, four MCP clients |
-| `docs/`               | Reference, decisions, design document                      |
-| `tools/eslint`        | The local rule that enforces the core's module boundaries  |
+| Path                  | Content                                                     |
+| --------------------- | ----------------------------------------------------------- |
+| `packages/core`       | `@kadeya/mqtt-intelligence-core`: the engine, as a library  |
+| `packages/mcp-server` | `@kadeya/mqtt-intelligence-mcp`: the MCP server and the CLI |
+| `examples/`           | A fictional factory, five configurations, four MCP clients  |
+| `docs/`               | Reference, decisions, design document                       |
+| `tools/eslint`        | The local rule that enforces the core's module boundaries   |
 
 ## Roadmap
 

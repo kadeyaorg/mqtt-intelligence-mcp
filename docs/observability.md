@@ -85,12 +85,12 @@ conventions ([ADR-0015](adr/0015-observability-ports.md)).
 Supplying a recorder is one object:
 
 ```ts
-import { createEngine } from '@kadeya/mqtt-intel-core';
+import { createEngine } from '@kadeya/mqtt-intelligence-core';
 
 const engine = createEngine(config, { metrics: myRecorder });
 ```
 
-`@kadeya/mqtt-intel-core/testing` ships `InMemoryMetricsRecorder`, which is what the suite
+`@kadeya/mqtt-intelligence-core/testing` ships `InMemoryMetricsRecorder`, which is what the suite
 asserts against.
 
 ## Degradation is a number, not a silence

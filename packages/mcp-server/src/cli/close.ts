@@ -6,7 +6,7 @@
  * deadline; overrunning it is reported and then abandoned, because a server that cannot stop
  * is worse than one that stops untidily.
  */
-import { describeError, type Logger } from '@kadeya/mqtt-intel-core';
+import { describeError, type Logger } from '@kadeya/mqtt-intelligence-core';
 
 export const CLOSE_TIMEOUT_MS = 5_000;
 

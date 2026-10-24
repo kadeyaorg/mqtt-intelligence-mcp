@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 /** Runtime dependencies the MCP package may ever declare (docs/proposal/03-architecture.md §4). */
 const ALLOWED_RUNTIME_DEPENDENCIES = new Set([
-  '@kadeya/mqtt-intel-core',
+  '@kadeya/mqtt-intelligence-core',
   '@modelcontextprotocol/server',
   'zod',
 ]);
@@ -61,16 +61,16 @@ describe('mcp-server package manifest', () => {
 
 describe('workspace wiring', () => {
   it('resolves the core package through its public entry point', async () => {
-    const core: unknown = await import('@kadeya/mqtt-intel-core');
+    const core: unknown = await import('@kadeya/mqtt-intelligence-core');
 
     expect(core).toBeTypeOf('object');
   });
 });
 
 describe('the command-line entry point', () => {
-  it('is published as a single bin, so "npx @kadeya/mqtt-intel-mcp" resolves it', async () => {
+  it('is published as a single bin, so "npx @kadeya/mqtt-intelligence-mcp" resolves it', async () => {
     const manifest = await readManifest();
 
-    expect(manifest['bin']).toEqual({ 'mqtt-intel-mcp': 'dist/cli/bin.js' });
+    expect(manifest['bin']).toEqual({ 'mqtt-intelligence-mcp': 'dist/cli/bin.js' });
   });
 });

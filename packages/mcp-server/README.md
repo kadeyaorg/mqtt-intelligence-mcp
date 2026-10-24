@@ -1,4 +1,4 @@
-# @kadeya/mqtt-intel-mcp
+# @kadeya/mqtt-intelligence-mcp
 
 **Give AI agents safe, structured and observable access to MQTT infrastructures.**
 
@@ -10,7 +10,7 @@ It is **read-only** — there is no publish path at all — works with any stand
 and tells the agent **what it could not observe** so the agent does not invent the rest.
 
 ```bash
-npx @kadeya/mqtt-intel-mcp check --config ./mqtt-intelligence.yaml
+npx @kadeya/mqtt-intelligence-mcp check --config ./mqtt-intelligence.yaml
 ```
 
 Then point an MCP client at the same file:
@@ -20,7 +20,7 @@ Then point an MCP client at the same file:
   "mcpServers": {
     "mqtt-intelligence": {
       "command": "npx",
-      "args": ["-y", "@kadeya/mqtt-intel-mcp", "--config", "/absolute/path/to/config.yaml"]
+      "args": ["-y", "@kadeya/mqtt-intelligence-mcp", "--config", "/absolute/path/to/config.yaml"]
     }
   }
 }
@@ -52,7 +52,7 @@ stack are in the repository:
 **[github.com/kadeyaorg/mqtt-intelligence-mcp](https://github.com/kadeyaorg/mqtt-intelligence-mcp)**
 
 The engine behind it is published separately as
-[`@kadeya/mqtt-intel-core`](https://www.npmjs.com/package/@kadeya/mqtt-intel-core), with no MCP
+[`@kadeya/mqtt-intelligence-core`](https://www.npmjs.com/package/@kadeya/mqtt-intelligence-core), with no MCP
 dependency.
 
 Apache-2.0 · Node.js 22 (≥ 22.12), 24 or 26

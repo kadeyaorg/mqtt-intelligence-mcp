@@ -19,7 +19,7 @@
     escaped and redacted before an agent sees them.
   - A read policy where deny beats allow, applied at ingest: a denied topic is never stored,
     counted or listed.
-  - A `mqtt-intel-mcp` command: `serve` over stdio, and `check` to validate a configuration and
+  - A `mqtt-intelligence-mcp` command: `serve` over stdio, and `check` to validate a configuration and
     test every broker before wiring it to an agent.
 
 - [#35](https://github.com/kadeyaorg/mqtt-intelligence-mcp/pull/35) [`12c81d9`](https://github.com/kadeyaorg/mqtt-intelligence-mcp/commit/12c81d9b7388dd549c91b60c427c0394cb772f67) Thanks [@christophe77](https://github.com/christophe77)! - A topic's shape now carries when each field was first and last seen, so a change becomes visible.
@@ -141,4 +141,4 @@
   permitted.
 
 - Updated dependencies [[`bd6d9b2`](https://github.com/kadeyaorg/mqtt-intelligence-mcp/commit/bd6d9b204ffc5874da8277f028ba05fc0d191be2), [`12c81d9`](https://github.com/kadeyaorg/mqtt-intelligence-mcp/commit/12c81d9b7388dd549c91b60c427c0394cb772f67), [`73abd1c`](https://github.com/kadeyaorg/mqtt-intelligence-mcp/commit/73abd1cf39c1b96b3a44e617ce116dbf84e2292b), [`4868a22`](https://github.com/kadeyaorg/mqtt-intelligence-mcp/commit/4868a2272b11302711649cf53018cd5b27fffb35), [`9609928`](https://github.com/kadeyaorg/mqtt-intelligence-mcp/commit/9609928c9803c4d84089c438b52c424cf4eae3e7), [`f9f40f4`](https://github.com/kadeyaorg/mqtt-intelligence-mcp/commit/f9f40f4c6e879fb0b7c7e609709e202ad4c6d66f), [`b4e5df5`](https://github.com/kadeyaorg/mqtt-intelligence-mcp/commit/b4e5df5970f20dd99fd6f1dff3aa34a2476c1e69), [`669934a`](https://github.com/kadeyaorg/mqtt-intelligence-mcp/commit/669934ab773704e9a08615feb2cf42cb7acf4f93), [`12c81d9`](https://github.com/kadeyaorg/mqtt-intelligence-mcp/commit/12c81d9b7388dd549c91b60c427c0394cb772f67), [`669934a`](https://github.com/kadeyaorg/mqtt-intelligence-mcp/commit/669934ab773704e9a08615feb2cf42cb7acf4f93), [`4b03d5f`](https://github.com/kadeyaorg/mqtt-intelligence-mcp/commit/4b03d5fe412e2a49a737ef8e7dbdc652d9144985)]:
-  - @kadeya/mqtt-intel-core@0.2.0
+  - @kadeya/mqtt-intelligence-core@0.2.0

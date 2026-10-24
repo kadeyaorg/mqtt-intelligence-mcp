@@ -100,7 +100,7 @@ beforeAll(async () => {
   // If this fails, the example's URL changed and this suite would have tested a stale copy.
   expect(shipped, `${SHIPPED_CONFIG} no longer uses ${SHIPPED_URL}`).toContain(SHIPPED_URL);
 
-  directory = await mkdtemp(join(tmpdir(), 'mqtt-intel-example-'));
+  directory = await mkdtemp(join(tmpdir(), 'mqtt-intelligence-example-'));
   configPath = join(directory, 'mqtt-intelligence.yaml');
   await writeFile(
     configPath,

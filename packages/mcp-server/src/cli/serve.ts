@@ -8,8 +8,8 @@
  * Once our own listeners are removed, a second SIGINT terminates the process the way Node
  * does by default, which is the right answer to an operator pressing Ctrl-C twice.
  */
-import type { Engine, Logger } from '@kadeya/mqtt-intel-core';
-import { describeError } from '@kadeya/mqtt-intel-core';
+import type { Engine, Logger } from '@kadeya/mqtt-intelligence-core';
+import { describeError } from '@kadeya/mqtt-intelligence-core';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import { createMcpServer } from '../server.js';
 import { closeWithDeadline } from './close.js';

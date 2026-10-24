@@ -3,8 +3,8 @@
 This repository publishes two packages, and each keeps its own changelog — a version number
 means something only for the package it belongs to.
 
-- [`@kadeya/mqtt-intel-core`](packages/core/CHANGELOG.md) — the engine
-- [`@kadeya/mqtt-intel-mcp`](packages/mcp-server/CHANGELOG.md) — the MCP server and the CLI
+- [`@kadeya/mqtt-intelligence-core`](packages/core/CHANGELOG.md) — the engine
+- [`@kadeya/mqtt-intelligence-mcp`](packages/mcp-server/CHANGELOG.md) — the MCP server and the CLI
 
 Those files are written by [Changesets](https://github.com/changesets/changesets) at release
 time, from the notes added alongside each change. Nothing has been released yet; see

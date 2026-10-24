@@ -9,7 +9,7 @@
  * Internal failures are the exception: they return a correlation id and nothing else, with
  * the detail going to the log, since an unexpected error may quote anything.
  */
-import { isMqttIntelligenceError, type Logger } from '@kadeya/mqtt-intel-core';
+import { isMqttIntelligenceError, type Logger } from '@kadeya/mqtt-intelligence-core';
 import type { CallToolResult } from '@modelcontextprotocol/server';
 import { randomUUID } from 'node:crypto';
 

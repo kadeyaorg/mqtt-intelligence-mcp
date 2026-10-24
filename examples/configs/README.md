@@ -43,7 +43,7 @@ adding to them, so repeat the ones you still want.
 ## Checking one
 
 ```bash
-npx @kadeya/mqtt-intel-mcp check --config examples/configs/single-broker.yaml
+npx @kadeya/mqtt-intelligence-mcp check --config examples/configs/single-broker.yaml
 ```
 
 Exit code 3 means the file is wrong and says which field. Exit code 4 means the file is fine

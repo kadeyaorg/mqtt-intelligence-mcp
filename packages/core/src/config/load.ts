@@ -2,7 +2,7 @@
  * Loading a configuration: from a YAML (or JSON) file, or from the environment alone.
  *
  * The environment-only path exists for the five-minute first run:
- * `MQTT_URL=mqtt://localhost:1883 npx @kadeya/mqtt-intel-mcp`. It produces the same
+ * `MQTT_URL=mqtt://localhost:1883 npx @kadeya/mqtt-intelligence-mcp`. It produces the same
  * validated document a file would, so there is a single code path afterwards.
  */
 import { readFile } from 'node:fs/promises';

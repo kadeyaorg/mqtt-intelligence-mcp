@@ -165,7 +165,7 @@ flowchart LR
 
 ## Decisions taken before Step 0 (2026-09-18)
 
-1. **Package names:** `@kadeya/mqtt-intel-core` and `@kadeya/mqtt-intel-mcp` (ADR-0002).
+1. **Package names:** `@kadeya/mqtt-intelligence-core` and `@kadeya/mqtt-intelligence-mcp` (ADR-0002).
    Project name: MQTT Intelligence MCP. The npm scope is still to be confirmed.
 2. **License:** Apache-2.0, NOTICE, DCO, no CLA. Copyright holder: Kadeya Inc. (Automated
    Water Machines, Inc.) (ADR-0017).

@@ -16,7 +16,7 @@ const BROKER = parseBrokerId('factory-fr');
 const transportOptions: TransportOptions = {
   url: 'mqtt://localhost:1883',
   protocolVersion: 5,
-  clientId: 'mqtt-intel-test',
+  clientId: 'mqtt-observer-test',
   keepaliveSeconds: 30,
   connectTimeoutMs: 10_000,
 };

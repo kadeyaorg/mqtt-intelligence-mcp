@@ -56,7 +56,7 @@ and about what the exit codes mean.
 
 - An MCP client that mis-launches the server gets a readable diagnostic where it already
   looks for one, instead of a JSON parse error.
-- `mqtt-intel-mcp --version > version.txt` writes an empty file. This is the known cost of
+- `mqtt-intelligence-mcp --version > version.txt` writes an empty file. This is the known cost of
   decision 1; the version is also available from `package.json` and from the MCP server
   identity returned to a client.
 - Supervisors, container health checks and CI jobs can branch on the exit code without

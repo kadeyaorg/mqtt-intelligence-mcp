@@ -35,7 +35,7 @@ function optionsFor(broker: RunningMosquitto): BrokerConnectionOptions {
     transport: {
       url: broker.url,
       protocolVersion: 5,
-      clientId: `mqtt-intel-reconnect-${Math.random().toString(16).slice(2, 10)}`,
+      clientId: `mqtt-observer-reconnect-${Math.random().toString(16).slice(2, 10)}`,
       keepaliveSeconds: 5,
       connectTimeoutMs: 5000,
     },
@@ -112,7 +112,7 @@ describe('a broker that is not there', () => {
           // Port 1 is reserved and nothing listens on it.
           url: 'mqtt://127.0.0.1:1',
           protocolVersion: 5,
-          clientId: 'mqtt-intel-unreachable',
+          clientId: 'mqtt-observer-unreachable',
           keepaliveSeconds: 5,
           connectTimeoutMs: 2000,
         },

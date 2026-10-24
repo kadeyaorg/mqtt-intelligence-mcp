@@ -9,7 +9,7 @@
  * silently different settings.
  */
 import { parseArgs } from 'node:util';
-import { describeError } from '@kadeya/mqtt-intel-core';
+import { describeError } from '@kadeya/mqtt-intelligence-core';
 
 export type CommandName = 'serve' | 'check' | 'help' | 'version';
 

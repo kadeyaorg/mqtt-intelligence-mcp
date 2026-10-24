@@ -28,7 +28,7 @@ const filter = parseTopicFilter;
 const transportOptions: TransportOptions = {
   url: 'mqtt://localhost:1883',
   protocolVersion: 5,
-  clientId: 'mqtt-intel-test',
+  clientId: 'mqtt-observer-test',
   keepaliveSeconds: 30,
   connectTimeoutMs: 5000,
 };

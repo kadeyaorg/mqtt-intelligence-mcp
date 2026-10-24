@@ -1,5 +1,5 @@
 /**
- * Public API of the MQTT Intelligence MCP server (`@kadeya/mqtt-intel-mcp`).
+ * Public API of the MQTT Intelligence MCP server (`@kadeya/mqtt-intelligence-mcp`).
  *
  * Everything exported from this file is public API under semver. The tool names, their
  * schemas and their error codes are part of it too: prompts depend on them (ADR-0012). So

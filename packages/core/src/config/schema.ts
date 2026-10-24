@@ -150,7 +150,7 @@ const brokerSchema = z.strictObject({
   url: brokerUrlSchema,
   /** 5 is MQTT 5, 4 is MQTT 3.1.1. */
   protocolVersion: z.union([z.literal(5), z.literal(4)]).default(5),
-  clientId: clientIdSchema.prefault({ prefix: 'mqtt-intel' }),
+  clientId: clientIdSchema.prefault({ prefix: 'mqtt-observer' }),
   connect: z.enum(['startup', 'lazy']).default('startup'),
   auth: authSchema.optional(),
   tls: tlsSchema.optional(),

@@ -5,6 +5,6 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@kadeya/mqtt-intel-example-simulator"],
+  "ignore": ["@kadeya/mqtt-intelligence-example-simulator"],
   "privatePackages": { "version": true, "tag": false }
 }

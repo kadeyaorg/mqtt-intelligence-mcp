@@ -27,7 +27,7 @@ function optionsFor(
   return {
     url: broker.url,
     protocolVersion: 5,
-    clientId: `mqtt-intel-tls-${Math.random().toString(16).slice(2, 10)}`,
+    clientId: `mqtt-observer-tls-${Math.random().toString(16).slice(2, 10)}`,
     keepaliveSeconds: 10,
     connectTimeoutMs: 5000,
     ...overrides,

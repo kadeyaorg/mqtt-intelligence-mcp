@@ -19,7 +19,7 @@
     escaped and redacted before an agent sees them.
   - A read policy where deny beats allow, applied at ingest: a denied topic is never stored,
     counted or listed.
-  - A `mqtt-intel-mcp` command: `serve` over stdio, and `check` to validate a configuration and
+  - A `mqtt-intelligence-mcp` command: `serve` over stdio, and `check` to validate a configuration and
     test every broker before wiring it to an agent.
 
 - [#35](https://github.com/kadeyaorg/mqtt-intelligence-mcp/pull/35) [`12c81d9`](https://github.com/kadeyaorg/mqtt-intelligence-mcp/commit/12c81d9b7388dd549c91b60c427c0394cb772f67) Thanks [@christophe77](https://github.com/christophe77)! - A topic's shape now carries when each field was first and last seen, so a change becomes visible.

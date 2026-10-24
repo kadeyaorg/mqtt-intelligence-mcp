@@ -19,7 +19,7 @@
 ```text
 mqtt-intelligence-mcp/
 ├── packages/
-│   ├── core/                      # @kadeya/mqtt-intel-core   (library, published)
+│   ├── core/                      # @kadeya/mqtt-intelligence-core   (library, published)
 │   │   ├── src/
 │   │   │   ├── domain/            # topics, messages, ids, errors, clock, secrets (pure)
 │   │   │   ├── config/            # zod schema, loader (YAML/env), secret references
@@ -39,7 +39,7 @@ mqtt-intelligence-mcp/
 │   │   │   ├── engine.ts          # createEngine(): the public facade
 │   │   │   └── index.ts           # public API (explicit exports only)
 │   │   └── test/                  # unit + integration tests
-│   └── mcp-server/                # @kadeya/mqtt-intel-mcp     (bin, published)
+│   └── mcp-server/                # @kadeya/mqtt-intelligence-mcp     (bin, published)
 │       ├── src/
 │       │   ├── tools/             # one file per tool: input/output schema, handler, renderer
 │       │   ├── render/            # compact text renderers, answer envelope
@@ -99,14 +99,14 @@ flowchart TB
     A[MCP client]
   end
 
-  subgraph MCP["@kadeya/mqtt-intel-mcp"]
+  subgraph MCP["@kadeya/mqtt-intelligence-mcp"]
     CLI["cli/main<br/>serve · check"]
     SRV["McpServer (SDK v2)<br/>stdio"]
     TOOLS["tools/*<br/>zod schemas · handlers · renderers"]
     ERR["error mapping"]
   end
 
-  subgraph CORE["@kadeya/mqtt-intel-core"]
+  subgraph CORE["@kadeya/mqtt-intelligence-core"]
     ENG["Engine facade<br/>createEngine()"]
     Q["query<br/>tree · search · describe · recent"]
     DISC["discovery<br/>coverage · windows"]
@@ -147,7 +147,7 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-  mcp["@kadeya/mqtt-intel-mcp"] --> core["@kadeya/mqtt-intel-core"]
+  mcp["@kadeya/mqtt-intelligence-mcp"] --> core["@kadeya/mqtt-intelligence-core"]
   mcp --> sdk["@modelcontextprotocol/server ^2"]
   mcp --> zod["zod ^4"]
   core --> mqtt["mqtt ^5.16"]
@@ -346,7 +346,7 @@ The core never produces an `inference` section. That is the agent's job.
 
 Loaded from YAML (`--config`, or `MQTT_INTELLIGENCE_CONFIG`), validated by a zod schema,
 then frozen. A file-less quick start is supported:
-`MQTT_URL=mqtt://localhost:1883 npx @kadeya/mqtt-intel-mcp`.
+`MQTT_URL=mqtt://localhost:1883 npx @kadeya/mqtt-intelligence-mcp`.
 
 ```yaml
 version: 1
@@ -356,7 +356,7 @@ brokers:
     url: mqtts://mqtt-fr.example.com:8883 # credentials in the URL are rejected
     protocolVersion: 5 # 5 | 4 (3.1.1)
     clientId:
-      prefix: mqtt-intel # default; random suffix appended
+      prefix: mqtt-observer # default; random suffix appended
     connect: startup # startup | lazy
     auth:
       username: { env: MQTT_FR_USERNAME } # or a plain string (usernames are not secret)
@@ -482,7 +482,7 @@ stateDiagram-v2
   after repeated failures). `failed` exits only through an explicit retry.
 - Each state transition emits an event (`BrokerStatus` change), a log line and metrics;
   connected periods feed `ObservationCoverage.gaps`.
-- Default client ID: `mqtt-intel-<8 random hex>`; a fixed client ID is allowed but logged
+- Default client ID: `mqtt-observer-<8 random hex>`; a fixed client ID is allowed but logged
   with a warning (collision risk with real devices).
 
 ## 10. Subscription lifecycle
@@ -593,7 +593,7 @@ interface MessageStore {
 - Batch-oriented writes; cursor-based pagination everywhere (no offset scans).
 - V0.1 implementations: `MemoryTopicCatalog` (Map + LRU), `MemoryMessageStore`
   (per-topic ring buffers + global byte budget, oldest-first eviction).
-- A **reusable contract test suite** (`@kadeya/mqtt-intel-core/testing`) is the
+- A **reusable contract test suite** (`@kadeya/mqtt-intelligence-core/testing`) is the
   acceptance test for every future adapter (SQLite, Redis, Postgres/Timescale).
 
 ## 13. Security boundaries

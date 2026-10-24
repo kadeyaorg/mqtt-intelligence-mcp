@@ -8,7 +8,7 @@
  *
  * It is also written to be cheap in tokens: a listing of forty topics should not cost a page.
  */
-import type { Answer, ObservationCoverage, PayloadView } from '@kadeya/mqtt-intel-core';
+import type { Answer, ObservationCoverage, PayloadView } from '@kadeya/mqtt-intelligence-core';
 
 export function formatInstant(epochMs: number | undefined): string {
   return epochMs === undefined ? 'never' : new Date(epochMs).toISOString();

@@ -23,7 +23,7 @@ const FACTORY = parseBrokerId('factory-fr');
 let directory: string;
 
 beforeEach(async () => {
-  directory = await mkdtemp(join(tmpdir(), 'mqtt-intel-config-'));
+  directory = await mkdtemp(join(tmpdir(), 'mqtt-intelligence-config-'));
 });
 
 afterEach(async () => {

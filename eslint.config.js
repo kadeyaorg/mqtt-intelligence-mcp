@@ -5,9 +5,9 @@ import tseslint from 'typescript-eslint';
 import moduleBoundaries from './tools/eslint/module-boundaries.js';
 
 /** npm name of the engine package (provisional scope, see ADR-0002). */
-const CORE_PACKAGE = '@kadeya/mqtt-intel-core';
+const CORE_PACKAGE = '@kadeya/mqtt-intelligence-core';
 /** npm name of the MCP package (provisional scope, see ADR-0002). */
-const MCP_PACKAGE = '@kadeya/mqtt-intel-mcp';
+const MCP_PACKAGE = '@kadeya/mqtt-intelligence-mcp';
 
 /**
  * Dependency table of the core's top-level modules (docs/proposal/03-architecture.md).

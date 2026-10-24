@@ -10,8 +10,8 @@
  * One broker failing does not stop the others: the report lists all of them, and the exit
  * code says whether anything failed.
  */
-import type { BrokerReport, Engine, ObservationCoverage } from '@kadeya/mqtt-intel-core';
-import { sanitizeError } from '@kadeya/mqtt-intel-core';
+import type { BrokerReport, Engine, ObservationCoverage } from '@kadeya/mqtt-intelligence-core';
+import { sanitizeError } from '@kadeya/mqtt-intelligence-core';
 import { EXIT_CODES } from './exit-codes.js';
 import type { CliOutput } from './output.js';
 import { writeLines } from './output.js';
