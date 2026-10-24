@@ -7,7 +7,7 @@ boundaries, is the [architecture proposal](proposal/03-architecture.md).
 ```text
 AI agent (MCP client)
         │  stdio, JSON-RPC
-   @kadeya/mqtt-intel-mcp      six tools · schemas · rendering · CLI
+   @kadeya/mqtt-intel-mcp      MCP tools · schemas · rendering · CLI
         │  Engine
    @kadeya/mqtt-intel-core     policy · discovery · ingest · catalogue · payloads
         │  ports
@@ -111,7 +111,7 @@ watch it go red, put it back. A test that passes either way buys confidence it h
 
 ## Where to read next
 
-- [The six tools](mcp-tools.md)
+- [The MCP tools](mcp-tools.md)
 - [Configuration](configuration.md)
 - [Security and threat model](security.md)
 - [Logs and metrics](observability.md)

@@ -1,6 +1,6 @@
 # mqtt-investigation
 
-A skill that teaches an agent **how** to use this server's six tools, as opposed to what they
+A skill that teaches an agent **how** to use this server's tools, as opposed to what they
 do. The tool descriptions explain each call; this explains the order to make them in, how to
 read the limitations, when the server is the wrong instrument, and the traps that have cost
 real time against real machines.

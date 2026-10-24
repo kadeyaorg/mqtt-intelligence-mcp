@@ -26,10 +26,10 @@ Then point an MCP client at the same file:
 }
 ```
 
-## The six tools
+## The tools
 
 `mqtt_list_brokers` · `mqtt_discover_topics` · `mqtt_topic_tree` · `mqtt_search_topics` ·
-`mqtt_describe_topic` · `mqtt_get_recent_messages`
+`mqtt_describe_topic` · `mqtt_get_recent_messages` · `mqtt_infer_schema`
 
 Every answer separates what was **observed** from what was **computed**, says what the server
 could see, and states what it cannot tell you. "Not observed" never means "does not exist".
