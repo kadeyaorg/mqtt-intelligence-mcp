@@ -83,7 +83,9 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: write
-      # Required for npm provenance: the registry verifies the build came from this workflow.
+      # The whole of the publishing credential. npm exchanges this job's OIDC identity for a
+      # short-lived token and verifies the provenance attestation against it. Remove it and
+      # the release cannot authenticate at all.
       id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -146,12 +148,25 @@ jobs:
       - name: Integration tests
         run: npm run test:integration
 
+      - name: Check that npm is new enough to authenticate without a token
+        # Trusted publishing exchanges the job's OIDC identity for a short-lived token, and
+        # npm only knows how to do that from 11.5.1. An older npm does not fall back — it
+        # looks for a credential it will not find. The supported Node lines are not equal
+        # here: 26 ships npm 11.20, 24 ships 11.19, and 22 ships 10.9.
+        run: |
+          set -euo pipefail
+          required=11.5.1
+          actual="$(npm --version)"
+          echo "npm $actual (trusted publishing needs $required)"
+          [ "$( { echo "$required"; echo "$actual"; } | sort -V | head -1)" = "$required" ]
+
       - name: Publish
-        # Provenance is requested per package through publishConfig, so the attestation is
-        # produced whichever way publish is invoked.
+        # No credential. The registry trusts this repository and this workflow file through
+        # OIDC, configured per package on npmjs.com, and both packages refuse a token-based
+        # publish outright. Provenance is requested per package through publishConfig and
+        # comes from the same identity, so the attestation is produced whichever way publish
+        # is invoked.
         run: npm run release
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Tag and release
         env:

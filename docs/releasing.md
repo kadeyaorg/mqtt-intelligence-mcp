@@ -3,31 +3,42 @@
 Releases are **manual**. Nothing in this repository can publish to npm because somebody merged
 a pull request: a release is a decision, and it is taken by a person, in the Actions tab.
 
-## Before the first release
+## How a release authenticates
 
-The `@kadeya` organisation exists on npm, the repository is public, and both packages are out
-of their `"private": true` safety catch. **One thing is still open.**
+**There is no publishing credential in this repository.** Both packages are configured on
+npmjs.com to accept a trusted publisher — this repository, this workflow file — and to refuse
+a token-based publish outright. The publish job exchanges its OIDC identity for a short-lived
+token that exists for the length of the run.
 
-**The first publish needs a token, and only the first.** A trusted publisher is configured per
-package, and npm cannot configure one for a package that does not exist yet. So: create a
-granular access token scoped to `@kadeya/*` with the shortest expiry npm offers, store it as
-the `NPM_TOKEN` repository secret, run the release, then **revoke the token and delete the
-secret**. From the second release on, see [Trusted publishing](#trusted-publishing).
+What that depends on, and what breaks it:
 
-Two things that are no longer open, because the release depends on them staying that way:
+- **`id-token: write` on the publish job.** It is the whole credential now. Removing it does
+  not fall back to anything.
+- **npm 11.5.1 or newer**, which is what performs the exchange. The supported Node lines are
+  not equal here: 26 ships npm 11.20, 24 ships 11.19, **22 ships 10.9**. The job checks before
+  it publishes and says what it found.
+- **A public repository.** npm refuses a provenance attestation pointing at a private source
+  repository, with a 422 _after_ the tarball has been uploaded. The job asks the API first, so
+  making this repository private again fails the release early and says why. The alternative
+  then is `publishConfig.provenance: false` in both packages, and no badge.
+- **Both packages publishable.** `"private": true` was the catch that made an accidental
+  publish impossible before the first release. `tools/packaging/manifests.test.js` refuses a
+  change that puts it back on only one of them: one published package whose peer is private is
+  a package nobody can install.
 
-- **The repository is public.** npm refuses a provenance attestation that points at a private
-  source repository, and it refuses it with a 422 _after_ the tarball has been uploaded — a
-  failed release rather than a clean refusal. The publish job asks the API before anything
-  leaves the runner, so turning the repository private again fails the release early and says
-  so. The alternative then is `publishConfig.provenance: false` in both packages, and no badge.
-- **Both packages are publishable.** `"private": true` was the catch that made an accidental
-  publish impossible; the pull request that opened the registry removed it from both at once.
-  `tools/packaging/manifests.test.js` refuses a change that touches only one of them, because
-  one published package whose peer is still private is a package nobody can install.
+`tools/workflows/release.test.js` holds the first two and refuses a publish token reappearing
+in the workflow, because a token now grants nothing and would only produce a release that
+fails for a reason nobody expects.
 
-The scope was chosen in [ADR-0002](adr/0002-monorepo-with-two-packages.md), where it is marked
-provisional.
+If the trusted publisher ever has to be rebuilt — npm fixes the provider and repository when
+the connection is created — delete it and make a new one, per package: GitHub Actions,
+`kadeyaorg` / `mqtt-intelligence-mcp`, workflow `release.yml`, no environment, and **Allow
+npm `publish`** ticked. Without that last one only `npm stage publish` is permitted, and
+`changeset publish` calls `npm publish`. The repository field is the **monorepo** for both
+packages, not the package's own name.
+
+The scope was chosen in [ADR-0002](adr/0002-monorepo-with-two-packages.md), which also records
+why the names are spelled out in full.
 
 ## The cycle
 
@@ -51,7 +62,23 @@ changeset.
 Actions → **Release** → Run workflow → `version`.
 
 It collects the changesets, bumps the versions, writes `CHANGELOG.md` in each package,
-refreshes the lockfile, and opens a `release/vX.Y.Z` pull request.
+refreshes the lockfile, commits, and pushes `release/vX.Y.Z`.
+
+**Then it fails, and that is expected.** Its last action is `gh pr create`, which GitHub
+refuses:
+
+```
+GitHub Actions is not permitted to create or approve pull requests (createPullRequest)
+```
+
+The job's `pull-requests: write` permission is not enough; a separate repository setting gates
+it — Settings → Actions → General → Workflow permissions → _Allow GitHub Actions to create and
+approve pull requests_ — and it is deliberately left off. Actions being able to open pull
+requests is a power this repository has no need for, and the cost of leaving it off is that
+you open the release pull request yourself. The push output prints the link.
+
+Everything before that step succeeded, so do not dispatch `version` again: it would try to
+collect changesets that no longer exist.
 
 Read that pull request. The changelog is the thing most users will read about this project
 after the README; if an entry does not make sense to someone who has not seen the diff, fix it
@@ -84,22 +111,17 @@ the workflow's own repository, which the packaging test checks, and a **public**
   start a new user runs, and it is the one thing the test suite cannot check.
 - Announce it where it is useful, not everywhere.
 
-## Trusted publishing
+## How this came to be tokenless
 
-npm revoked all classic tokens on 2025-12-09, and a long-lived automation token sitting in a
-repository secret is the most valuable thing in a release pipeline to steal. Once both packages
-exist on the registry, replace it with OIDC:
+The first release, 0.2.0 on 2026-10-24, could not use a trusted publisher: npm configures one
+per package, and it cannot configure one for a package that does not exist. So it went out
+with a granular access token scoped to `@kadeya/*`, which was revoked and deleted immediately
+afterwards, and the packages were then set to require their trusted publisher.
 
-1. On npmjs.com, for each package: Settings → Trusted publisher → GitHub Actions, with the
-   repository `kadeyaorg/mqtt-intelligence-mcp` and the workflow `release.yml`.
-2. Set each package to require its trusted publisher, so no token can publish it any more.
-3. Remove the `NODE_AUTH_TOKEN` environment from the Publish step of
-   [`release.yml`](../.github/workflows/release.yml), and delete the `NPM_TOKEN` secret.
-
-The workflow already has the `id-token: write` permission the exchange needs, and the npm that
-ships with the pinned Node line is new enough — trusted publishing needs npm 11.5.1 or later.
-Nothing else about the release changes: `npm run release` uses the short-lived token it gets
-from the exchange instead of reading a secret.
+That is the general shape for any new package in this scope: one short-lived token for the
+first version, then OIDC and nothing stored. npm revoked all classic tokens on 2025-12-09 and
+is removing direct publishing with granular tokens in January 2027, so a token is a bridge and
+never a destination.
 
 ## Version policy
 
