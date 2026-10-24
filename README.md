@@ -8,10 +8,11 @@ what is published on them, what the payloads look like, what changed around an i
 **read-only**, works with **any standard MQTT broker**, and tells the agent **what it could not
 observe** so the agent does not invent the rest.
 
-> **Status: V0.1, not yet published to npm.** Everything on this page works today from a
-> clone. The `@kadeya` npm organisation is not confirmed yet, so both packages are marked
-> private and `npx @kadeya/mqtt-intelligence-mcp` does not resolve. [Releasing](docs/releasing.md)
-> says what is left.
+> **Status: v0.2.0, on npm with provenance.**
+> [`@kadeya/mqtt-intelligence-mcp`](https://www.npmjs.com/package/@kadeya/mqtt-intelligence-mcp)
+> and [`@kadeya/mqtt-intelligence-core`](https://www.npmjs.com/package/@kadeya/mqtt-intelligence-core).
+> Pre-1.0, so a breaking change is a minor bump and says so in capitals;
+> [Releasing](docs/releasing.md) defines what counts as the public surface.
 
 ---
 
