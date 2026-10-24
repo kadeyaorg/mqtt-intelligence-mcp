@@ -102,6 +102,27 @@ describe('the tool surface', () => {
     expect(missing).toEqual([]);
   });
 
+  it('has every field the skill tells an agent to read', async () => {
+    // The skill names input and output fields directly — `firstSeenSinceMs`,
+    // `intervalGroups`, `topicsDiscoveredWhileWaiting`. Rename one and the skill goes on
+    // telling an agent to use it, which is a wrong instruction rather than a missing one.
+    // Only true camelCase is checked: a single lower-case word in backticks is prose.
+    const { client } = await harness();
+    const listed = JSON.stringify(await client.listTools());
+    const skill = await readFile(
+      new URL('../../../skills/mqtt-investigation/SKILL.md', import.meta.url),
+      'utf8',
+    );
+
+    const cited = [...skill.matchAll(/`([a-z]+[A-Z][A-Za-z0-9]*)`/g)]
+      .map((match) => match[1])
+      .filter((name) => name !== undefined);
+    const unknown = [...new Set(cited)].filter((name) => !listed.includes(name));
+
+    expect(unknown).toEqual([]);
+    expect(cited.length).toBeGreaterThan(0);
+  });
+
   it('exposes exactly seven tools, all read-only', async () => {
     const { client } = await harness();
 
