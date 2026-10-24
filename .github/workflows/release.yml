@@ -158,6 +158,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          # An annotated tag records who made it, and a runner has no identity of its own.
+          # Without this `git tag -a` fails with "empty ident name" — after the packages have
+          # been published, which is the worst place in this job to stop.
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           version="$(node -p "require('./packages/mcp-server/package.json').version")"
           # Only this version's section of the changelog, not the whole history.
           awk -v heading="## ${version}" '

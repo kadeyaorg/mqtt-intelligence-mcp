@@ -37,7 +37,23 @@ async function steps() {
     .map((step) => ({ run: String(step.run), env: step.env ?? {} }));
 }
 
+/** Git writes that record an author, and so need one configured in the same step. */
+const AUTHORED = [/git commit /, /git tag -a /];
+
 describe('the release workflow', () => {
+  it('configures an identity in every step that writes git history', async () => {
+    const writing = (await steps()).filter((step) =>
+      AUTHORED.some((pattern) => pattern.test(step.run)),
+    );
+
+    expect(writing).not.toHaveLength(0);
+    for (const step of writing) {
+      // A runner has no identity of its own, and git refuses with "empty ident name".
+      expect(step.run).toMatch(/git config user.name/);
+      expect(step.run).toMatch(/git config user.email/);
+    }
+  });
+
   it.each(CREDENTIALS)('gives %s its %s', async (command, variable) => {
     const running = (await steps()).filter((step) => step.run.includes(command));
 
