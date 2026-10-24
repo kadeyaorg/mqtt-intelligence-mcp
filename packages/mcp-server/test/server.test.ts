@@ -114,7 +114,9 @@ describe('the tool surface', () => {
       'utf8',
     );
 
-    const cited = [...skill.matchAll(/`([a-z]+[A-Z][A-Za-z0-9]*)`/g)].map((match) => match[1]);
+    const cited = [...skill.matchAll(/`([a-z]+[A-Z][A-Za-z0-9]*)`/g)]
+      .map((match) => match[1])
+      .filter((name) => name !== undefined);
     const unknown = [...new Set(cited)].filter((name) => !listed.includes(name));
 
     expect(unknown).toEqual([]);
