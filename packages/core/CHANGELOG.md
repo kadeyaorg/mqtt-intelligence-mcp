@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0
+## 0.2.0
 
 ### Minor Changes
 
@@ -169,7 +169,3 @@
   Retain As Published is now off, which is the protocol default and makes MQTT 5 behave like
   MQTT 3.1.1. A delivery marked retained once again means what the specification says it means
   on a forwarded message: replayed at subscribe time.
-
-Nothing released yet. This file is written by
-[Changesets](https://github.com/changesets/changesets) at release time, from the notes added
-alongside each change.
